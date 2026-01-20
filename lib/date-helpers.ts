@@ -103,15 +103,15 @@ export function classifyDueStatus(dueDate: Date | string): DueStatus {
 export function getStatusColor(status: DueStatus): string {
   switch (status) {
     case "overdue":
-      return "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900";
+      return "bg-red-950/40 border-red-900";
     case "d7":
-      return "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900";
+      return "bg-amber-950/40 border-amber-900";
     case "d15":
-      return "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900";
+      return "bg-yellow-950/40 border-yellow-900";
     case "d30":
-      return "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900";
+      return "bg-green-950/40 border-green-900";
     default:
-      return "bg-gray-50 dark:bg-gray-950/20 border-gray-200 dark:border-gray-900";
+      return "bg-gray-950/40 border-gray-900";
   }
 }
 
@@ -144,4 +144,9 @@ export function getNext12Months(): Date[] {
 
 export function getMonthBucket(date: Date): string {
   return format(date, "MMM/yyyy", { locale: ptBR });
+}
+
+export function pluralize(count: number, singular: string, plural?: string): string {
+  if (count === 1) return `${count} ${singular}`;
+  return `${count} ${plural || `${singular}s`}`;
 }

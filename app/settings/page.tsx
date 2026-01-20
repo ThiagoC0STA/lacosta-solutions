@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { useClients, usePolicies } from "@/hooks/use-supabase-data";
 import { deleteAllClients, deleteAllPolicies } from "@/lib/supabase/queries";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Trash2, Database, RefreshCw } from "lucide-react";
+import { AlertTriangle, Trash2, Database, RefreshCw, Download, FileSpreadsheet } from "lucide-react";
+import { exportClientsToExcel, exportPoliciesToExcel, exportDashboardToExcel } from "@/lib/export-helpers";
+import { computeDashboardStats } from "@/lib/dashboard-helpers";
 
 export default function SettingsPage() {
   const { clients } = useClients();
@@ -83,9 +85,9 @@ export default function SettingsPage() {
         </Card>
 
         {/* Danger Zone */}
-        <Card className="border-red-200 dark:border-red-900">
+        <Card className="border-red-900">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+            <CardTitle className="flex items-center gap-2 text-red-400">
               <AlertTriangle className="h-5 w-5" />
               Zona de Perigo
             </CardTitle>
@@ -94,11 +96,11 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg">
-              <h3 className="font-semibold text-red-900 dark:text-red-100 mb-2">
+            <div className="p-4 bg-red-950/20 border border-red-900 rounded-lg">
+              <h3 className="font-semibold text-red-100 mb-2">
                 Limpar Todos os Dados
               </h3>
-              <p className="text-sm text-red-800 dark:text-red-200 mb-4">
+              <p className="text-sm text-red-200 mb-4">
                 Esta ação irá deletar permanentemente todos os clientes e apólices do sistema.
                 Esta ação não pode ser desfeita.
               </p>
@@ -115,14 +117,14 @@ export default function SettingsPage() {
               ) : (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-red-900 dark:text-red-100">
-                      Digite "DELETAR TUDO" para confirmar:
+                    <label className="text-sm font-medium text-red-100">
+                      Digite &quot;DELETAR TUDO&quot; para confirmar:
                     </label>
                     <input
                       type="text"
                       value={confirmText}
                       onChange={(e) => setConfirmText(e.target.value)}
-                      className="w-full px-3 py-2 border border-red-300 dark:border-red-800 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2 border border-red-800 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="DELETAR TUDO"
                     />
                   </div>
@@ -171,31 +173,71 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">Tema</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Alterar entre tema claro e escuro
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Configurar
-                </Button>
-              </div>
               
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">Exportar Dados</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Exportar todos os dados para Excel
-                  </p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h3 className="font-medium flex items-center gap-2">
+                      <FileSpreadsheet className="h-4 w-4" />
+                      Exportar Clientes
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Exportar todos os clientes para Excel
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => exportClientsToExcel(clients, policies)}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar
+                  </Button>
                 </div>
-                <Button variant="outline" size="sm">
-                  Exportar
-                </Button>
+                
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h3 className="font-medium flex items-center gap-2">
+                      <FileSpreadsheet className="h-4 w-4" />
+                      Exportar Renovações
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Exportar todas as apólices para Excel
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => exportPoliciesToExcel(policies, clients)}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar
+                  </Button>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h3 className="font-medium flex items-center gap-2">
+                      <FileSpreadsheet className="h-4 w-4" />
+                      Exportar Dashboard Completo
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Exportar estatísticas, clientes e apólices
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const stats = computeDashboardStats(policies, clients);
+                      exportDashboardToExcel(clients, policies, stats);
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar
+                  </Button>
+                </div>
               </div>
-            </div>
           </CardContent>
         </Card>
       </div>

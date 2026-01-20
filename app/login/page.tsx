@@ -58,35 +58,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg mb-4">
             <Shield className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-2">
+          <h1 className="text-3xl font-bold text-slate-50 mb-2">
             Lacosta Solutions
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-slate-400">
             Sistema de Gestão de Renovações
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 p-8">
+        <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700/50 p-8">
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50 mb-2">
+            <h2 className="text-2xl font-semibold text-slate-50 mb-2">
               Bem-vindo de volta
             </h2>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-slate-400">
               Entre com suas credenciais para continuar
             </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">
+              <Label htmlFor="email" className="text-slate-300">
                 Email
               </Label>
               <div className="relative">
@@ -99,13 +99,13 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
-                  className="pl-10 h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                  className="pl-10 h-12 bg-slate-800 border-slate-700 focus:border-blue-400"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">
+              <Label htmlFor="password" className="text-slate-300">
                 Senha
               </Label>
               <div className="relative">
@@ -118,13 +118,13 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading}
-                  className="pl-10 h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                  className="pl-10 h-12 bg-slate-800 border-slate-700 focus:border-blue-400"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 p-4 rounded-lg text-sm">
+              <div className="bg-red-950/20 border border-red-900 text-red-400 p-4 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -147,7 +147,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+        <p className="text-center text-sm text-slate-400 mt-6">
           © 2024 Lacosta Solutions. Todos os direitos reservados.
         </p>
       </div>

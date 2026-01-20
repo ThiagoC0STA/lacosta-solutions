@@ -9,15 +9,23 @@ import {
   Upload,
   Menu,
   Settings,
+  Calendar,
+  BarChart3,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/renewals", label: "Renovações", icon: FileText },
   { href: "/clients", label: "Clientes", icon: Users },
+  { href: "/calendar", label: "Calendário", icon: Calendar },
+  { href: "/reports", label: "Relatórios", icon: BarChart3 },
   { href: "/import", label: "Importar", icon: Upload },
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
@@ -63,7 +71,14 @@ function NavContent({
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <>
@@ -77,14 +92,33 @@ export function Sidebar() {
 
       {/* Mobile sidebar */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen} side="left">
-        <SheetContent className="p-0 w-64">
+        <SheetContent className="p-0 w-64 flex flex-col">
           <SheetHeader className="p-4 border-b">
             <h2 className="text-lg font-semibold">Lacosta Solutions</h2>
           </SheetHeader>
-          <NavContent
-            pathname={pathname}
-            onLinkClick={() => setMobileOpen(false)}
-          />
+          <div className="flex-1 overflow-y-auto p-4">
+            <NavContent
+              pathname={pathname}
+              onLinkClick={() => setMobileOpen(false)}
+            />
+          </div>
+          <div className="border-t border-border p-4 space-y-3">
+            <div className="flex items-center gap-2 px-2">
+              <span className="text-lg font-medium text-foreground">Bem-vindo Luciano</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                handleLogout();
+                setMobileOpen(false);
+              }}
+              className="w-full justify-start hover:bg-destructive/10 hover:text-destructive"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
 
@@ -102,6 +136,20 @@ export function Sidebar() {
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           <NavContent pathname={pathname} onLinkClick={() => {}} />
+        </div>
+        <div className="border-t border-border p-4 space-y-3">
+          <div className="flex items-center gap-2 px-2">
+            <span className="text-md font-medium text-foreground">Bem-vindo Luciano</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="w-full justify-start hover:bg-destructive/10 hover:text-destructive"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sair
+          </Button>
         </div>
       </aside>
     </>

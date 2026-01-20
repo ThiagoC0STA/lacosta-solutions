@@ -112,8 +112,16 @@ export function usePolicies() {
       id: string;
       data: Partial<Omit<Policy, "id">>;
     }) => updatePolicy(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["policies"] });
+    onSuccess: (updatedPolicy) => {
+      // Optimistically update the cache to avoid refetch delay
+      queryClient.setQueryData<Policy[]>(["policies"], (old) => {
+        if (!old) return [updatedPolicy];
+        return old.map((p) => (p.id === updatedPolicy.id ? updatedPolicy : p));
+      });
+      // Still invalidate to ensure consistency, but with a delay
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["policies"] });
+      }, 100);
     },
   });
 

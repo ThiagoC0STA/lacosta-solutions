@@ -1,15 +1,13 @@
 "use client";
 
-import { Search, User, LogOut, Moon, Sun } from "lucide-react";
+import { Search, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useTheme } from "@/components/providers/theme-provider";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function TopBar() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -19,13 +17,18 @@ export function TopBar() {
     router.refresh();
   };
 
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
+    // Navigate to appropriate page based on search query
+    // Try clients first, then renewals
+    router.push(`/clients?search=${encodeURIComponent(searchQuery)}`);
   };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card/80 backdrop-blur-xl px-4 lg:px-6">
-      <div className="flex flex-1 items-center gap-4">
+      <form onSubmit={handleSearch} className="flex flex-1 items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
@@ -36,36 +39,20 @@ export function TopBar() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-      </div>
-      <div className="flex items-center gap-2">
+      </form>
+      <div className="flex items-center gap-2 pl-3">
+        <div className="flex items-center gap-2">
+          
+          <span className="hidden sm:inline text-sm font-medium">Bem-vindo Luciano</span>
+        </div>
         <Button
           variant="ghost"
           size="icon"
-          onClick={toggleTheme}
-          className="h-9 w-9 hover:bg-accent/50"
+          onClick={handleLogout}
+          className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
         >
-          {resolvedTheme === "dark" ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
+          <LogOut className="h-4 w-4" />
         </Button>
-        <div className="flex items-center gap-2 border-l border-border pl-3">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-              <User className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <span className="hidden sm:inline text-sm font-medium">Admin</span>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-            className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
     </header>
   );

@@ -648,9 +648,10 @@ export default function ImportPage() {
           });
 
           // Fetch fresh data from database to check for duplicates (more reliable)
+          // Using higher limit for duplicate checking (up to 10k records)
           console.log("Buscando dados do banco para verificação de duplicatas...");
-          const existingPoliciesWithClients = await getPoliciesWithClients();
-          const existingClients = await getClients();
+          const existingPoliciesWithClients = await getPoliciesWithClients({ limit: 10000 });
+          const existingClients = await getClients({ limit: 10000 });
           
           // Build comprehensive set of unique keys from database
           const existingUniqueKeys = new Set<string>();
@@ -985,25 +986,25 @@ export default function ImportPage() {
               {status.type !== "idle" && (
                 <div className={`rounded-lg p-4 ${
                   status.type === "success" 
-                    ? "bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900"
-                    : "bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900"
+                    ? "bg-green-950/20 border border-green-900"
+                    : "bg-red-950/20 border border-red-900"
                 }`}>
                   <div className="flex items-start gap-3">
                     {status.type === "success" ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5 shrink-0" />
                     ) : (
-                      <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                      <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
                       <p className={`font-medium whitespace-pre-line ${
                         status.type === "success" 
-                          ? "text-green-900 dark:text-green-100"
-                          : "text-red-900 dark:text-red-100"
+                          ? "text-green-100"
+                          : "text-red-100"
                       }`}>
                         {status.message}
                       </p>
                       {status.stats && (
-                        <div className="mt-2 space-y-1 text-sm text-green-800 dark:text-green-200">
+                        <div className="mt-2 space-y-1 text-sm text-green-200">
                           <p>• {status.stats.clients} cliente(s) criado(s)</p>
                           <p>• {status.stats.policies} apólice(s) criada(s)</p>
                           {status.stats.skipped > 0 && (

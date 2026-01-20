@@ -15,7 +15,7 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80 shadow-sm",
         outline: "text-foreground shadow-sm",
         birthday:
-          "border-purple-300 dark:border-purple-500/50 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-500/30 dark:to-pink-500/30 text-purple-700 dark:text-purple-300 shadow-md hover:shadow-lg",
+          "border-purple-500/50 bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-purple-300 shadow-md hover:shadow-lg",
         birthdayToday:
           "border-purple-400 bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl animate-pulse",
       },

@@ -5,11 +5,34 @@ import { supabase } from "./client";
 // CLIENTS
 // ============================================
 
-export async function getClients(): Promise<Client[]> {
-  const { data, error } = await supabase
+export interface PaginationOptions {
+  limit?: number;
+  offset?: number;
+  search?: string;
+}
+
+const DEFAULT_LIMIT = 1000; // Safety limit to prevent loading everything
+const MAX_LIMIT = 10000; // Maximum limit for operations that need more data (e.g., duplicate checking)
+
+export async function getClients(options?: PaginationOptions): Promise<Client[]> {
+  let query = supabase
     .from("clients")
-    .select("*")
-    .order("name", { ascending: true });
+    .select("*", { count: "exact" });
+
+  // Apply search filter if provided
+  if (options?.search) {
+    query = query.or(`name.ilike.%${options.search}%,email.ilike.%${options.search}%,phone.ilike.%${options.search}%`);
+  }
+
+  // Apply ordering
+  query = query.order("name", { ascending: true });
+
+  // Apply pagination with safety limits
+  const limit = Math.min(options?.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+  const offset = options?.offset ?? 0;
+  query = query.range(offset, offset + limit - 1);
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data || [];
@@ -101,11 +124,41 @@ export async function createClientsBatch(
 // POLICIES
 // ============================================
 
-export async function getPolicies(): Promise<Policy[]> {
-  const { data, error } = await supabase
+export interface PolicyFilters extends PaginationOptions {
+  clientId?: string;
+  status?: string;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+}
+
+export async function getPolicies(options?: PolicyFilters): Promise<Policy[]> {
+  let query = supabase
     .from("policies")
-    .select("*")
-    .order("due_date", { ascending: true });
+    .select("*", { count: "exact" });
+
+  // Apply filters
+  if (options?.clientId) {
+    query = query.eq("client_id", options.clientId);
+  }
+  if (options?.status) {
+    query = query.eq("status", options.status);
+  }
+  if (options?.dueDateFrom) {
+    query = query.gte("due_date", options.dueDateFrom);
+  }
+  if (options?.dueDateTo) {
+    query = query.lte("due_date", options.dueDateTo);
+  }
+
+  // Apply ordering
+  query = query.order("due_date", { ascending: true });
+
+  // Apply pagination with safety limits
+  const limit = Math.min(options?.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+  const offset = options?.offset ?? 0;
+  query = query.range(offset, offset + limit - 1);
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data?.map(transformPolicyFromDB) || [];
@@ -214,8 +267,10 @@ export async function createPoliciesBatch(
 }
 
 // Get policies with client data for duplicate checking
-export async function getPoliciesWithClients(): Promise<Array<Policy & { client: Client }>> {
-  const { data, error } = await supabase
+// Note: For duplicate checking during imports, this may need to load more data
+// Use options.limit to increase if needed (up to MAX_LIMIT)
+export async function getPoliciesWithClients(options?: PolicyFilters): Promise<Array<Policy & { client: Client }>> {
+  let query = supabase
     .from("policies")
     .select(`
       *,
@@ -226,8 +281,31 @@ export async function getPoliciesWithClients(): Promise<Array<Policy & { client:
         email,
         birthday
       )
-    `)
-    .order("due_date", { ascending: true });
+    `, { count: "exact" });
+
+  // Apply filters
+  if (options?.clientId) {
+    query = query.eq("client_id", options.clientId);
+  }
+  if (options?.status) {
+    query = query.eq("status", options.status);
+  }
+  if (options?.dueDateFrom) {
+    query = query.gte("due_date", options.dueDateFrom);
+  }
+  if (options?.dueDateTo) {
+    query = query.lte("due_date", options.dueDateTo);
+  }
+
+  // Apply ordering
+  query = query.order("due_date", { ascending: true });
+
+  // Apply pagination with safety limits
+  const limit = Math.min(options?.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+  const offset = options?.offset ?? 0;
+  query = query.range(offset, offset + limit - 1);
+
+  const { data, error } = await query;
 
   if (error) throw error;
   
