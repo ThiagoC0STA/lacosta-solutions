@@ -9,7 +9,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="lg:pl-64">
         <TopBar />
-        <main className="p-4 lg:p-6">{children}</main>
+        <main className="p-8 lg:p-12 mx-auto">{children}</main>
       </div>
     </div>
   );

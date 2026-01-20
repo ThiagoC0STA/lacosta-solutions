@@ -8,6 +8,7 @@ import {
   Users,
   Upload,
   Menu,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/renewals", label: "Renovações", icon: FileText },
   { href: "/clients", label: "Clientes", icon: Users },
   { href: "/import", label: "Importar", icon: Upload },
+  { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
 function NavContent({
@@ -28,7 +30,7 @@ function NavContent({
   onLinkClick: () => void;
 }) {
   return (
-    <nav className="space-y-1 p-4">
+    <nav className="space-y-1 ">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = pathname === item.href;
@@ -38,14 +40,20 @@ function NavContent({
             href={item.href}
             onClick={onLinkClick}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+              "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 relative group",
               isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                ? "bg-gradient-to-r from-primary/15 to-primary/5 text-foreground border border-primary/20 shadow-md"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground hover:shadow-sm"
             )}
           >
-            <Icon className="h-5 w-5" />
-            {item.label}
+            <Icon className={cn(
+              "h-5 w-5 transition-transform duration-200",
+              isActive ? "scale-110" : "group-hover:scale-110"
+            )} />
+            <span>{item.label}</span>
+            {isActive && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full" />
+            )}
           </Link>
         );
       })}
@@ -81,13 +89,20 @@ export function Sidebar() {
       </Sheet>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:border-r lg:bg-background">
-        <div className="flex h-16 items-center border-b px-6">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Lacosta Solutions
-          </h1>
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:border-r lg:border-border lg:bg-card/80 lg:backdrop-blur-xl lg:shadow-xl">
+        <div className="flex h-16 items-center border-b border-border px-6 bg-gradient-to-r from-primary/5 to-transparent">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center">
+              <LayoutDashboard className="h-4 w-4 text-primary" />
+            </div>
+            <h1 className="text-lg font-bold text-foreground tracking-tight">
+              Lacosta Solutions
+            </h1>
+          </div>
         </div>
-        <NavContent pathname={pathname} onLinkClick={() => {}} />
+        <div className="flex-1 overflow-y-auto p-4">
+          <NavContent pathname={pathname} onLinkClick={() => {}} />
+        </div>
       </aside>
     </>
   );

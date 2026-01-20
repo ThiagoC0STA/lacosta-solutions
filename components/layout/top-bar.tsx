@@ -24,10 +24,10 @@ export function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card/80 backdrop-blur-xl px-4 lg:px-6">
       <div className="flex flex-1 items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
             type="search"
             placeholder="Buscar clientes, apólices..."
@@ -42,7 +42,7 @@ export function TopBar() {
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          className="h-9 w-9"
+          className="h-9 w-9 hover:bg-accent/50"
         >
           {resolvedTheme === "dark" ? (
             <Sun className="h-4 w-4" />
@@ -50,14 +50,18 @@ export function TopBar() {
             <Moon className="h-4 w-4" />
           )}
         </Button>
-        <div className="flex items-center gap-2 border-l pl-2">
-          <User className="h-4 w-4 text-muted-foreground" />
-          <span className="hidden sm:inline text-sm font-medium">Admin</span>
+        <div className="flex items-center gap-2 border-l border-border pl-3">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+              <User className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <span className="hidden sm:inline text-sm font-medium">Admin</span>
+          </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleLogout}
-            className="h-9 w-9"
+            className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
           </Button>

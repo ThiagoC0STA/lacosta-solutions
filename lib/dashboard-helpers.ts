@@ -6,8 +6,6 @@ import type {
 } from "@/types";
 import {
   differenceInDays,
-  isSameDay,
-  isSameMonth,
   startOfToday,
 } from "date-fns";
 import { classifyDueStatus } from "./date-helpers";
@@ -43,14 +41,16 @@ export function computeDashboardStats(
     if (!c.birthday) return false;
     const birthday =
       typeof c.birthday === "string" ? new Date(c.birthday) : c.birthday;
-    return isSameMonth(birthday, today);
+    // Compare only month, ignore year
+    return birthday.getMonth() === today.getMonth();
   }).length;
 
   const birthdaysToday = clients.filter((c) => {
     if (!c.birthday) return false;
     const birthday =
       typeof c.birthday === "string" ? new Date(c.birthday) : c.birthday;
-    return isSameDay(birthday, today);
+    // Compare only month and day, ignore year
+    return birthday.getMonth() === today.getMonth() && birthday.getDate() === today.getDate();
   }).length;
 
   return {
@@ -85,7 +85,8 @@ export function getTodaysBirthdays(clients: Client[]): Client[] {
     if (!c.birthday) return false;
     const birthday =
       typeof c.birthday === "string" ? new Date(c.birthday) : c.birthday;
-    return isSameDay(birthday, today);
+    // Compare only month and day, ignore year
+    return birthday.getMonth() === today.getMonth() && birthday.getDate() === today.getDate();
   });
 }
 

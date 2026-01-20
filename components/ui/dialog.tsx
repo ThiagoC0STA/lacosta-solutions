@@ -27,11 +27,14 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   return (
     <>
       <div
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md animate-in fade-in-0 h-full w-full"
         onClick={() => onOpenChange(false)}
       />
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 transform">
-        <div className="bg-background rounded-lg shadow-lg border p-6">
+      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-4xl -translate-x-1/2 -translate-y-1/2 transform px-4 animate-in fade-in-0 zoom-in-95 duration-200">
+        <div 
+          className="relative bg-background rounded-2xl shadow-[0_20px_25px_-5px_rgb(0_0_0_/_0.1),0_10px_10px_-5px_rgb(0_0_0_/_0.04)] border border-border/50 p-0 max-h-[90vh] overflow-hidden flex flex-col before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/5 before:via-transparent before:to-transparent before:pointer-events-none"
+          onClick={(e) => e.stopPropagation()}
+        >
           {children}
         </div>
       </div>
@@ -41,15 +44,17 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
 
 export function DialogHeader({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("mb-4", className)}>
-      {children}
+    <div className={cn("relative px-8 pt-8 pb-6 border-b border-border/50 bg-gradient-to-b from-background via-background to-muted/10 overflow-hidden", className)}>
+      {/* Decorative element */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl" />
+      <div className="relative">{children}</div>
     </div>
   );
 }
 
 export function DialogTitle({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <h2 className={cn("text-2xl font-semibold", className)}>
+    <h2 className={cn("text-2xl font-semibold tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text", className)}>
       {children}
     </h2>
   );
@@ -57,7 +62,7 @@ export function DialogTitle({ children, className }: { children: React.ReactNode
 
 export function DialogContent({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn(className)}>
+    <div className={cn("px-8 py-6 overflow-y-auto flex-1", className)}>
       {children}
     </div>
   );
