@@ -124,7 +124,7 @@ export function Sidebar() {
       </Sheet>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:border-r lg:border-border lg:bg-card/80 lg:backdrop-blur-xl lg:shadow-xl">
+      <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:border-r lg:border-border lg:bg-card/80 lg:backdrop-blur-xl lg:shadow-xl">
         <div className="flex h-16 items-center border-b border-border px-6 bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center">

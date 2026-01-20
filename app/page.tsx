@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { useClients, usePolicies } from "@/hooks/use-supabase-data";
@@ -13,7 +14,7 @@ import {
 } from "@/lib/dashboard-helpers";
 import { formatDate, pluralize, classifyDueStatus } from "@/lib/date-helpers";
 import { getNext12Months, getMonthBucket } from "@/lib/date-helpers";
-import type { RenewalWithClient } from "@/types";
+import type { RenewalWithClient, Client } from "@/types";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { Calendar, AlertTriangle, Users, FileText, TrendingUp, Clock, Sparkles, BarChart3, Gift, X, Building2, Phone, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,11 +22,19 @@ import Link from "next/link";
 import { getStatusFromTitle, getStatusColor } from "@/lib/colors";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { RenewalDetailModal } from "@/components/renewal-detail-modal";
+import { FilteredRenewalsModal } from "@/components/filtered-renewals-modal";
+import { BirthdaysModal } from "@/components/birthdays-modal";
+import { BirthdayDetailModal } from "@/components/birthday-detail-modal";
 
 export default function DashboardPage() {
   const { clients } = useClients();
-  const { policies } = usePolicies();
+  const { policies, updatePolicy, deletePolicy } = usePolicies();
   const [showUrgentActions, setShowUrgentActions] = useState(false);
+  const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
+  const [filteredRenewalsModal, setFilteredRenewalsModal] = useState<{ open: boolean; filter: string | null }>({ open: false, filter: null });
+  const [birthdaysModal, setBirthdaysModal] = useState<{ open: boolean; filter: "today" | "thisMonth" | null }>({ open: false, filter: null });
+  const [selectedBirthdayClient, setSelectedBirthdayClient] = useState<Client | null>(null);
 
   const renewalsWithClients = useMemo<RenewalWithClient[]>(() => {
     return policies.map((policy) => {
@@ -85,42 +94,69 @@ export default function DashboardPage() {
 
   const urgentCount = stats.overdue + stats.dueIn0to7;
 
+  const handleUpdateRenewal = useCallback(async (id: string, data: Partial<Omit<RenewalWithClient, "id" | "client">>) => {
+    const updated = await updatePolicy({ id, data });
+    // Update selectedRenewal with the returned data
+    if (selectedRenewal && selectedRenewal.id === id) {
+      setSelectedRenewal({
+        ...selectedRenewal,
+        ...updated,
+        client: selectedRenewal.client,
+      });
+    }
+    return { ...updated, client: selectedRenewal?.client || { id: "", name: "" } };
+  }, [updatePolicy, selectedRenewal]);
+
+  const handleSelectPolicy = useCallback((policyId: string) => {
+    const renewal = renewalsWithClients.find((r) => r.id === policyId);
+    if (renewal) {
+      setSelectedRenewal(renewal);
+    }
+  }, [renewalsWithClients]);
+
+
   const statCards = [
     {
       title: "Vencidos",
       value: stats.overdue,
       icon: AlertTriangle,
       description: "Requer atenção imediata",
+      filter: "overdue" as const,
     },
     {
-      title: "Vence em 0-7 dias",
+      title: "Urgentes",
       value: stats.dueIn0to7,
       icon: Clock,
-      description: "Urgente - ação necessária",
+      description: "Vencem em até 7 dias",
+      filter: "d7" as const,
     },
     {
-      title: "Vence em 8-15 dias",
+      title: "Próximas",
       value: stats.dueIn8to15,
       icon: Calendar,
-      description: "Próximas renovações",
+      description: "Vencem em 8-15 dias",
+      filter: "d15" as const,
     },
     {
-      title: "Vence em 16-30 dias",
+      title: "Futuras",
       value: stats.dueIn16to30,
       icon: BarChart3,
-      description: "Planejamento futuro",
+      description: "Vencem em 16-30 dias",
+      filter: "d30" as const,
     },
     {
       title: "Aniversários este mês",
       value: stats.birthdaysThisMonth,
       icon: Gift,
       description: "Celebrações do mês",
+      filter: "birthdayThisMonth" as const,
     },
     {
       title: "Aniversários hoje",
       value: stats.birthdaysToday,
       icon: Sparkles,
       description: "Parabéns de hoje!",
+      filter: "birthdayToday" as const,
     },
   ];
 
@@ -198,7 +234,21 @@ export default function DashboardPage() {
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 style={{ animationDelay: `${idx * 0.05}s` }}
               >
-                <Card className={`p-4 sm:p-6 border ${colors.borderColor} bg-card shadow-md hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden ${colors.hoverBg} hover:border-primary/30`}>
+                <Card 
+                  onClick={() => {
+                    if (card.filter) {
+                      if (card.filter === "birthdayToday" || card.filter === "birthdayThisMonth") {
+                        setBirthdaysModal({ 
+                          open: true, 
+                          filter: card.filter === "birthdayToday" ? "today" : "thisMonth" 
+                        });
+                      } else {
+                        setFilteredRenewalsModal({ open: true, filter: card.filter });
+                      }
+                    }
+                  }}
+                  className={`p-4 sm:p-6 border ${colors.borderColor} bg-card shadow-md hover:shadow-xl transition-all ${card.filter ? 'cursor-pointer' : 'cursor-default'} group relative overflow-hidden ${colors.hoverBg} hover:border-primary/30`}
+                >
                   {/* Decorative gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
@@ -325,6 +375,7 @@ export default function DashboardPage() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
+                        onClick={() => setSelectedRenewal(renewal)}
                         className="flex items-center justify-between rounded-xl border border-border p-3 sm:p-4 hover:border-blue-500/50 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-transparent transition-all cursor-pointer group shadow-sm hover:shadow-md w-full"
                       >
                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -390,6 +441,7 @@ export default function DashboardPage() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
+                        onClick={() => setSelectedBirthdayClient(client)}
                         className="flex items-center justify-between rounded-xl border border-border p-3 sm:p-4 hover:border-purple-500/50 hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-transparent transition-all cursor-pointer group shadow-sm hover:shadow-md w-full"
                       >
                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -611,6 +663,46 @@ export default function DashboardPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Filtered Renewals Modal */}
+        <FilteredRenewalsModal
+          open={filteredRenewalsModal.open}
+          onClose={() => setFilteredRenewalsModal({ open: false, filter: null })}
+          filter={filteredRenewalsModal.filter}
+          renewals={renewalsWithClients}
+          onRenewalClick={(renewal) => {
+            setSelectedRenewal(renewal);
+          }}
+        />
+
+        {/* Birthdays Modal */}
+        <BirthdaysModal
+          open={birthdaysModal.open}
+          onClose={() => setBirthdaysModal({ open: false, filter: null })}
+          filter={birthdaysModal.filter}
+          clients={clients}
+          onClientClick={(client) => {
+            setSelectedBirthdayClient(client);
+          }}
+        />
+
+        {/* Birthday Detail Modal */}
+        <BirthdayDetailModal
+          open={!!selectedBirthdayClient}
+          onClose={() => setSelectedBirthdayClient(null)}
+          client={selectedBirthdayClient}
+          policies={Array.isArray(policies) ? policies : []}
+        />
+
+        {/* Renewal Detail Modal */}
+        <RenewalDetailModal
+          renewal={selectedRenewal}
+          onClose={() => setSelectedRenewal(null)}
+          onUpdate={handleUpdateRenewal}
+          onDelete={deletePolicy}
+          allPolicies={Array.isArray(policies) ? policies : []}
+          onSelectPolicy={handleSelectPolicy}
+        />
       </motion.div>
     </AppLayout>
   );

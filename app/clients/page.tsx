@@ -15,7 +15,7 @@ import {
   type SortingState,
   type PaginationState,
 } from "@tanstack/react-table";
-import { formatDate, isBirthdayThisMonth } from "@/lib/date-helpers";
+import { formatDate, isBirthdayThisMonth, isBirthdayToday, classifyDueStatus } from "@/lib/date-helpers";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,9 +23,9 @@ import { ArrowUpDown, ArrowUp, ArrowDown, MessageCircle, X, User, Phone, Mail, C
 import { exportClientsToExcel } from "@/lib/export-helpers";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
-import { classifyDueStatus } from "@/lib/date-helpers";
 import { cn } from "@/lib/utils";
 import { getStatusColor } from "@/lib/colors";
+import { BirthdayDetailModal } from "@/components/birthday-detail-modal";
 
 function ClientsPageContent() {
   const { clients, updateClient, deleteClient, createClient } = useClients();
@@ -48,13 +48,7 @@ function ClientsPageContent() {
       setGlobalFilter(search);
     }
   }, [searchParams]);
-  const [selectedClient, setSelectedClient] = useState<typeof clientsWithStats[0] | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [editedClient, setEditedClient] = useState<Partial<typeof clientsWithStats[0]>>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
+  
   const clientsWithStats = useMemo(() => {
     const clientsList: any[] = Array.isArray(clients) ? clients : [];
     const policiesList: any[] = Array.isArray(policies) ? policies : [];
@@ -72,6 +66,14 @@ function ClientsPageContent() {
       };
     });
   }, [clients, policies]);
+
+  const [selectedClient, setSelectedClient] = useState<typeof clientsWithStats[0] | null>(null);
+  const [selectedBirthdayClient, setSelectedBirthdayClient] = useState<typeof clientsWithStats[0] | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [editedClient, setEditedClient] = useState<Partial<typeof clientsWithStats[0]>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredData = useMemo(() => {
     let filtered = clientsWithStats;
@@ -340,14 +342,23 @@ function ClientsPageContent() {
                       </td>
                     </tr>
                   ) : (
-                    table.getRowModel().rows.map((row) => (
+                    table.getRowModel().rows.map((row) => {
+                      const client = row.original;
+                      const hasBirthday = client.birthday && (isBirthdayToday(client.birthday) || isBirthdayThisMonth(client.birthday));
+                      return (
                         <tr
                           key={row.id}
                           className={cn(
                             "border-b border-border transition-all duration-200 cursor-pointer group hover:bg-muted/30",
                             getStatusColor("default").rowHover
                           )}
-                          onClick={() => setSelectedClient(row.original)}
+                          onClick={() => {
+                            if (hasBirthday) {
+                              setSelectedBirthdayClient(client);
+                            } else {
+                              setSelectedClient(client);
+                            }
+                          }}
                         >
                           {row.getVisibleCells().map((cell) => (
                             <td key={cell.id} className="px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 text-xs sm:text-sm whitespace-nowrap">
@@ -358,7 +369,8 @@ function ClientsPageContent() {
                           </td>
                         ))}
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -952,6 +964,14 @@ function ClientsPageContent() {
             </DialogContent>
           )}
         </Dialog>
+
+        {/* Birthday Detail Modal */}
+        <BirthdayDetailModal
+          open={!!selectedBirthdayClient}
+          onClose={() => setSelectedBirthdayClient(null)}
+          client={selectedBirthdayClient}
+          policies={Array.isArray(policies) ? policies : []}
+        />
       </div>
     </AppLayout>
   );
