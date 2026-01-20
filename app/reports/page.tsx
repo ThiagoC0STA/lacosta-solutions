@@ -279,7 +279,7 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <ResponsiveContainer width="100%" height={250} className="sm:h-[280px] lg:h-[300px]">
+                <ResponsiveContainer width="100%" height={400} className="sm:h-[280px] lg:h-[300px]">
                   <PieChart>
                     <Pie
                       data={policiesByStatus}
@@ -400,62 +400,6 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Urgent Renewals */}
-        <Card className="md:p-6 border border-border bg-card shadow-lg">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-              Renovações Urgentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-3 text-red-400">
-                  Vencidas ({overduePolicies.length})
-                </h3>
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {overduePolicies.slice(0, 6).map((policy: any) => {
-                    const client = (Array.isArray(clients) ? clients : []).find((c: any) => c.id === policy.clientId);
-                    return (
-                      <div
-                        key={policy.id}
-                        className="p-4 rounded-lg border border-red-900 bg-red-950/20"
-                      >
-                        <p className="font-semibold text-sm">{client?.name || "Cliente não encontrado"}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Venceu em {formatDate(policy.dueDate)}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-3 text-amber-400">
-                  Vence em 0-7 dias ({urgentPolicies.length})
-                </h3>
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {urgentPolicies.slice(0, 6).map((policy: any) => {
-                    const client = (Array.isArray(clients) ? clients : []).find((c: any) => c.id === policy.clientId);
-                    return (
-                      <div
-                        key={policy.id}
-                        className="p-4 rounded-lg border border-amber-900 bg-amber-950/20"
-                      >
-                        <p className="font-semibold text-sm">{client?.name || "Cliente não encontrado"}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Vence em {formatDate(policy.dueDate)}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </AppLayout>
   );
