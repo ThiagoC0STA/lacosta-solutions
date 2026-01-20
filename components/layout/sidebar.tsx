@@ -84,15 +84,16 @@ export function Sidebar() {
     <>
       {/* Mobile menu button */}
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-background border shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-lg bg-card border border-border shadow-lg hover:bg-accent transition-colors"
         onClick={() => setMobileOpen(true)}
+        aria-label="Abrir menu"
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-5 w-5 text-foreground" />
       </button>
 
       {/* Mobile sidebar */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen} side="left">
-        <SheetContent className="p-0 w-64 flex flex-col">
+        <SheetContent className="p-0 flex flex-col">
           <SheetHeader className="p-4 border-b">
             <h2 className="text-lg font-semibold">Lacosta Solutions</h2>
           </SheetHeader>

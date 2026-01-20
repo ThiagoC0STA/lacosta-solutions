@@ -458,36 +458,29 @@ export default function RenewalsPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
-                <RefreshCw className="h-7 w-7 text-primary" />
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
+                <RefreshCw className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
                   Renovações
                 </h1>
-                <p className="text-muted-foreground text-lg mt-1">
+                <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mt-1">
                   Gerencie todas as renovações de apólices
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => exportPoliciesToExcel(policies as any, clients as any)}
-                className="shadow-md hover:shadow-lg"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
+            <div className="flex gap-2 sm:gap-3">
               <Button
                 onClick={() => {
                   setIsCreatingPolicy(true);
                   setNewPolicy({});
                 }}
-                className="shadow-lg hover:shadow-xl"
+                className="shadow-lg hover:shadow-xl flex-1 sm:flex-none"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Apólice
@@ -499,12 +492,12 @@ export default function RenewalsPage() {
         {/* Filters */}
         <Card className="shadow-lg border-border">
           <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
                   <Filter className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle className="text-xl">Filtros</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">Filtros</CardTitle>
               </div>
               {isSelectMode && selectedRows.size > 0 && (
                 <div className="flex items-center gap-2">
@@ -646,7 +639,7 @@ export default function RenewalsPage() {
                       {headerGroup.headers.map((header) => (
                         <th
                           key={header.id}
-                          className="h-12 px-6 text-left align-middle font-semibold text-xs text-muted-foreground uppercase tracking-wider whitespace-nowrap"
+                          className="h-12 px-3 sm:px-4 lg:px-6 text-left align-middle font-semibold text-xs text-muted-foreground uppercase tracking-wider whitespace-nowrap"
                         >
                           {header.isPlaceholder
                             ? null
@@ -712,7 +705,7 @@ export default function RenewalsPage() {
                           }}
                         >
                           {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id} className="px-6 py-3.5 text-sm whitespace-nowrap">
+                            <td key={cell.id} className="px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3.5 text-xs sm:text-sm whitespace-nowrap">
                               {flexRender(
                                 cell.column.columnDef.cell,
                                 cell.getContext()
@@ -728,9 +721,9 @@ export default function RenewalsPage() {
             </div>
             
             {/* Pagination Controls */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border/30">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 sm:px-6 py-4 border-t border-border/30">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                   Mostrando {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} a{" "}
                   {Math.min(
                     (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
@@ -739,56 +732,77 @@ export default function RenewalsPage() {
                   de {table.getFilteredRowModel().rows.length} renovações
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.setPageIndex(0)}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  Primeira
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                >
-                  Próxima
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                  disabled={!table.getCanNextPage()}
-                >
-                  Última
-                </Button>
-                <Select
-                  value={table.getState().pagination.pageSize.toString()}
-                  onChange={(e) => {
-                    table.setPageSize(Number(e.target.value));
-                  }}
-                  className="ml-2 w-24"
-                >
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                  <option value="200">200</option>
-                </Select>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.setPageIndex(0)}
+                    disabled={!table.getCanPreviousPage()}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Primeira
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-xs sm:text-sm text-muted-foreground px-2 whitespace-nowrap">
+                    Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Próxima
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                    disabled={!table.getCanNextPage()}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Última
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Por página:</label>
+                  <Select
+                    value={table.getState().pagination.pageSize.toString()}
+                    onChange={(e) => {
+                      table.setPageSize(Number(e.target.value));
+                    }}
+                    className="w-full sm:w-20 text-xs sm:text-sm"
+                  >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                  </Select>
+                </div>
               </div>
+            </div>
+            
+            {/* Export Button */}
+            <div className="px-4 sm:px-6 pb-4">
+              <Button
+                variant="outline"
+                onClick={() => exportPoliciesToExcel(policies as any, clients as any)}
+                className="w-full sm:w-auto shadow-md hover:shadow-lg"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exportar para Excel
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -811,12 +825,24 @@ export default function RenewalsPage() {
           }
         }}>
           <DialogHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-primary" />
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-primary" />
+                  </div>
+                  <DialogTitle className="text-2xl">Nova Apólice</DialogTitle>
                 </div>
-                <DialogTitle className="text-2xl">Nova Apólice</DialogTitle>
+                <button
+                  onClick={() => {
+                    setIsCreatingPolicy(false);
+                    setNewPolicy({});
+                  }}
+                  className="rounded-lg p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 shrink-0 z-20"
+                  aria-label="Fechar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -866,30 +892,13 @@ export default function RenewalsPage() {
                 >
                   Cancelar
                 </Button>
-                <button
-                  onClick={() => {
-                    setIsCreatingPolicy(false);
-                    setNewPolicy({});
-                  }}
-                  className="rounded-lg p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  <X className="h-5 w-5" />
-                </button>
               </div>
             </div>
           </DialogHeader>
           <DialogContent className="space-y-6">
-            <Card className="relative overflow-hidden">
-              <CardHeader className="pb-4 relative">
-                <CardTitle className="text-lg flex items-center gap-2.5">
-                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
-                    <FileText className="h-4 w-4 text-primary" />
-                  </div>
-                  Informações da Apólice
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 relative">
-                <div className="grid gap-4 md:grid-cols-2">
+            {/* New Policy Form - No Card wrapper */}
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                     <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       <User className="h-3.5 w-3.5" />
@@ -998,8 +1007,7 @@ export default function RenewalsPage() {
                     className="w-full min-h-[100px] rounded-lg border border-input/50 bg-background/50 backdrop-blur-sm px-3 py-2 text-sm font-semibold ring-offset-background placeholder:text-muted-foreground transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:border-ring focus-visible:bg-background"
                   />
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

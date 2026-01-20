@@ -123,18 +123,18 @@ export default function ReportsPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
-                <BarChart3 className="h-7 w-7 text-primary" />
+      <div className="space-y-4 sm:space-y-6">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-14 lg:h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
+                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 lg:h-7 lg:w-7 text-primary" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
                   Relatórios
                 </h1>
-                <p className="text-muted-foreground text-lg mt-1">
+                <p className="text-xs sm:text-sm lg:text-base lg:text-lg text-muted-foreground mt-1">
                   Análises detalhadas e estatísticas
                 </p>
               </div>
@@ -144,45 +144,46 @@ export default function ReportsPage() {
                 const stats = computeDashboardStats(policies as any, clients as any);
                 exportDashboardToExcel(clients as any, policies as any, stats);
               }}
-              className="shadow-lg hover:shadow-xl"
+              className="shadow-lg hover:shadow-xl w-full sm:w-auto text-sm sm:text-base"
             >
-              <Download className="h-4 w-4 mr-2" />
-              Exportar Relatório Completo
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
+              <span className="hidden sm:inline">Exportar Relatório Completo</span>
+              <span className="sm:hidden">Exportar</span>
             </Button>
           </div>
         </div>
 
         {/* Summary Cards */}
         <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="p-6 border border-border bg-card shadow-lg">
+          <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total de Clientes</p>
-                <p className="text-3xl font-bold">{(Array.isArray(clients) ? clients : []).length}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total de Clientes</p>
+                <p className="text-2xl sm:text-3xl font-bold">{(Array.isArray(clients) ? clients : []).length}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-400" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border border-border bg-card shadow-lg">
+          <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Total de Apólices</p>
-                <p className="text-3xl font-bold">{(Array.isArray(policies) ? policies : []).length}</p>
+                <p className="text-2xl sm:text-3xl font-bold">{(Array.isArray(policies) ? policies : []).length}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                <FileText className="h-6 w-6 text-indigo-400" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border border-border bg-card shadow-lg">
+          <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Prêmio Total</p>
-                <p className="text-3xl font-bold">
+                <p className="text-2xl sm:text-3xl font-bold">
                   {new Intl.NumberFormat("pt-BR", {
                     style: "currency",
                     currency: "BRL",
@@ -190,20 +191,20 @@ export default function ReportsPage() {
                   }).format(totalPremium)}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-green-400" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border border-border bg-card shadow-lg">
+          <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Apólices Ativas</p>
-                <p className="text-3xl font-bold">{activePolicies.length}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Apólices Ativas</p>
+                <p className="text-2xl sm:text-3xl font-bold">{activePolicies.length}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-purple-400" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
               </div>
             </div>
           </Card>
@@ -211,11 +212,11 @@ export default function ReportsPage() {
 
         {/* Financial Cards */}
         <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <Card className="p-6 border border-border bg-card shadow-lg">
+          <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Prêmio Este Mês</p>
-                <p className="text-3xl font-bold">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Prêmio Este Mês</p>
+                <p className="text-2xl sm:text-3xl font-bold">
                   {new Intl.NumberFormat("pt-BR", {
                     style: "currency",
                     currency: "BRL",
@@ -223,17 +224,17 @@ export default function ReportsPage() {
                   }).format(premiumThisMonth)}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-emerald-400" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border border-border bg-card shadow-lg">
+          <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Comissão Este Mês</p>
-                <p className="text-3xl font-bold">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Comissão Este Mês</p>
+                <p className="text-2xl sm:text-3xl font-bold">
                   {new Intl.NumberFormat("pt-BR", {
                     style: "currency",
                     currency: "BRL",
@@ -241,17 +242,17 @@ export default function ReportsPage() {
                   }).format(commissionThisMonth)}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-yellow-400" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border border-border bg-card shadow-lg">
+          <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Comissão Total</p>
-                <p className="text-3xl font-bold">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Comissão Total</p>
+                <p className="text-2xl sm:text-3xl font-bold">
                   {new Intl.NumberFormat("pt-BR", {
                     style: "currency",
                     currency: "BRL",
@@ -259,8 +260,8 @@ export default function ReportsPage() {
                   }).format(totalCommission)}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-orange-400" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-orange-400" />
               </div>
             </div>
           </Card>
@@ -269,16 +270,16 @@ export default function ReportsPage() {
         {/* Charts Row */}
         <div className="grid gap-5 lg:grid-cols-3">
           {/* Policies by Status */}
-          <Card className="p-6 border border-border bg-card shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Apólices por Status
+          <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>Apólices por Status</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={250} className="sm:h-[280px] lg:h-[300px]">
                   <PieChart>
                     <Pie
                       data={policiesByStatus}
@@ -343,11 +344,11 @@ export default function ReportsPage() {
           </Card>
 
           {/* Policies by Insurer */}
-          <Card className="p-6 pb-0 border border-border bg-card shadow-lg lg:col-span-2">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Top 10 Seguradoras
+          <Card className="p-4 sm:p-5 lg:p-6 pb-0 border border-border bg-card shadow-lg lg:col-span-2">
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                <Building2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>Top 10 Seguradoras</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -401,7 +402,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Urgent Renewals */}
-        <Card className="p-6 border border-border bg-card shadow-lg">
+        <Card className="md:p-6 border border-border bg-card shadow-lg">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />

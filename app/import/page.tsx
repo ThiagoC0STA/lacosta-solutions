@@ -890,7 +890,7 @@ export default function ImportPage() {
 
       // Create policies
           if (policiesToCreate.length > 0) {
-            await createPoliciesBatchFn(policiesToCreate);
+            await createPoliciesBatchFn(policiesToCreate as Policy[]);
           }
 
           setStatus({
@@ -935,11 +935,11 @@ export default function ImportPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="mb-8">
-          <h1 className="text-4xl font-semibold tracking-tight mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-2">
             Importar Dados
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
             Faça upload do arquivo Excel e os dados serão importados automaticamente
           </p>
         </div>
@@ -955,18 +955,18 @@ export default function ImportPage() {
           <CardContent>
             <div className="space-y-6">
                 <Label htmlFor="file-upload" className="cursor-pointer">
-                <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-border p-12 hover:bg-accent transition-colors">
+                <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 rounded-lg border-2 border-dashed border-border p-6 sm:p-8 lg:p-12 hover:bg-accent transition-colors">
                   {isProcessing ? (
                     <>
-                      <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                      <span className="text-lg font-medium">Processando arquivo...</span>
+                      <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 animate-spin text-primary" />
+                      <span className="text-sm sm:text-base lg:text-lg font-medium">Processando arquivo...</span>
                     </>
                   ) : (
                     <>
-                      <Upload className="h-12 w-12 text-muted-foreground" />
+                      <Upload className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-muted-foreground" />
                       <div className="text-center">
-                        <span className="text-lg font-medium">Clique para fazer upload</span>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <span className="text-sm sm:text-base lg:text-lg font-medium">Clique para fazer upload</span>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                           ou arraste o arquivo aqui
                         </p>
                       </div>

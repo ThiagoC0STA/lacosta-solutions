@@ -109,101 +109,105 @@ export function RenewalDetailModal({
   return (
     <Dialog open={!!renewal} onOpenChange={(open) => !open && onClose()}>
       <DialogHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <FileText className="h-5 w-5 text-primary" />
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 pr-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              </div>
+              <DialogTitle className="text-lg sm:text-xl lg:text-2xl truncate">
+                {isEditing ? "Editar Apólice" : "Detalhes da Renovação"}
+              </DialogTitle>
             </div>
-            <DialogTitle className="text-2xl">
-              {isEditing ? "Editar Apólice" : "Detalhes da Renovação"}
-            </DialogTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {!renewal.id.startsWith("dummy-") && (
-              <>
-                {!isEditing ? (
-                  <Button variant="outline" size="sm" onClick={handleEdit}>
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Editar
-                  </Button>
-                ) : (
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
-                      <Save className="h-4 w-4 mr-2" />
-                      {isSaving ? "Salvando..." : "Salvar"}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleCancel}>
-                      Cancelar
-                    </Button>
-                  </div>
-                )}
-                <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {isDeleting ? "Deletando..." : "Deletar"}
-                </Button>
-              </>
-            )}
             <button
               onClick={onClose}
-              className="rounded-lg p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="rounded-lg p-1.5 sm:p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 shrink-0 z-20"
+              aria-label="Fechar"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
+          {!renewal.id.startsWith("dummy-") && (
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              {!isEditing ? (
+                <Button variant="outline" size="sm" onClick={handleEdit} className="text-xs sm:text-sm shrink-0">
+                  <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Editar</span>
+                  <span className="sm:hidden">Editar</span>
+                </Button>
+              ) : (
+                <div className="flex gap-1 sm:gap-1.5">
+                  <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="text-xs sm:text-sm shrink-0">
+                    <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                    <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
+                    <span className="sm:hidden">{isSaving ? "..." : "Salvar"}</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleCancel} className="text-xs sm:text-sm shrink-0">
+                    Cancelar
+                  </Button>
+                </div>
+              )}
+              <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting} className="text-xs sm:text-sm shrink-0">
+                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                <span className="hidden sm:inline">{isDeleting ? "Deletando..." : "Deletar"}</span>
+                <span className="sm:hidden">{isDeleting ? "..." : "Del"}</span>
+              </Button>
+            </div>
+          )}
         </div>
       </DialogHeader>
       <DialogContent className="space-y-6">
         {/* Client Info Card */}
         <Card className="relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
-          <CardHeader className="pb-4 relative">
-            <CardTitle className="text-lg flex items-center gap-2.5">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
-                <User className="h-4 w-4 text-primary" />
+          <CardHeader className="pb-3 sm:pb-4 relative">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2 sm:gap-2.5">
+              <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
+                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               </div>
-              Informações do Cliente
+              <span className="text-sm sm:text-base lg:text-lg">Informações do Cliente</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 relative">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+          <CardContent className="space-y-3 sm:space-y-4 relative">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
+              <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  <User className="h-3.5 w-3.5" />
+                  <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   <span>Nome</span>
                 </div>
-                <p className="font-semibold text-base">{renewal.client.name}</p>
+                <p className="font-semibold text-sm sm:text-base break-words">{renewal.client.name}</p>
               </div>
               {renewal.client.phone && (
-                <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <Phone className="h-3.5 w-3.5" />
+                    <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span>Telefone</span>
                   </div>
-                  <p className="font-semibold text-base">{renewal.client.phone}</p>
+                  <p className="font-semibold text-sm sm:text-base break-words">{renewal.client.phone}</p>
                 </div>
               )}
               {renewal.client.email && (
-                <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <Mail className="h-3.5 w-3.5" />
+                    <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span>Email</span>
                   </div>
-                  <p className="font-semibold text-base break-all">{renewal.client.email}</p>
+                  <p className="font-semibold text-sm sm:text-base break-all">{renewal.client.email}</p>
                 </div>
               )}
               {renewal.client.birthday && (
-                <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <CalendarLucide className="h-3.5 w-3.5" />
+                    <CalendarLucide className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span>Data de Nascimento</span>
                   </div>
-                  <p className="font-semibold text-base">{formatDate(renewal.client.birthday)}</p>
+                  <p className="font-semibold text-sm sm:text-base">{formatDate(renewal.client.birthday)}</p>
                 </div>
               )}
             </div>
             {renewal.client.phone && (
               <Button
-                className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl"
+                className="w-full mt-3 sm:mt-4 bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl text-sm sm:text-base"
                 onClick={() => {
                   const phone = renewal.client.phone?.replace(/\D/g, "");
                   if (phone) {
@@ -211,7 +215,7 @@ export function RenewalDetailModal({
                   }
                 }}
               >
-                <MessageCircle className="h-4 w-4 mr-2" />
+                <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
                 Enviar WhatsApp
               </Button>
             )}
@@ -222,19 +226,19 @@ export function RenewalDetailModal({
         {!renewal.id.startsWith("dummy-") && (
           <Card className="relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
-            <CardHeader className="pb-4 relative">
-              <CardTitle className="text-lg flex items-center gap-2.5">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
-                  <FileText className="h-4 w-4 text-primary" />
+            <CardHeader className="pb-3 sm:pb-4 relative">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2 sm:gap-2.5">
+                <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
+                  <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                 </div>
-                Informações da Apólice
+                <span className="text-sm sm:text-base lg:text-lg">Informações da Apólice</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 relative">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+            <CardContent className="space-y-3 sm:space-y-4 relative">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <FileText className="h-3.5 w-3.5" />
+                    <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span>Número da Apólice</span>
                   </div>
                   {isEditing ? (
@@ -248,9 +252,9 @@ export function RenewalDetailModal({
                     <p className="font-semibold text-base">{renewal.policyNumber || "-"}</p>
                   )}
                 </div>
-                <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <Building2 className="h-3.5 w-3.5" />
+                    <Building2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span>Seguradora</span>
                   </div>
                   {isEditing ? (
@@ -264,9 +268,9 @@ export function RenewalDetailModal({
                     <p className="font-semibold text-base">{renewal.insurer || "-"}</p>
                   )}
                 </div>
-                <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <Package className="h-3.5 w-3.5" />
+                    <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span>Produto</span>
                   </div>
                   {isEditing ? (
@@ -280,9 +284,9 @@ export function RenewalDetailModal({
                     <p className="font-semibold text-base">{renewal.product || "-"}</p>
                   )}
                 </div>
-                <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <CalendarLucide className="h-3.5 w-3.5" />
+                    <CalendarLucide className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span>Vencimento</span>
                   </div>
                   {isEditing ? (
@@ -304,9 +308,9 @@ export function RenewalDetailModal({
                     <p className="font-semibold text-base">{formatDate(renewal.dueDate)}</p>
                   )}
                 </div>
-                <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <Info className="h-3.5 w-3.5" />
+                    <Info className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span>Status</span>
                   </div>
                   {isEditing ? (
@@ -326,12 +330,12 @@ export function RenewalDetailModal({
                   )}
                 </div>
                 {renewal.premium && (
-                  <div className="space-y-2 p-4 rounded-xl bg-gradient-to-br from-green-950/30 to-green-950/20 border border-green-900/50 shadow-sm hover:shadow-md transition-all">
+                  <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-green-950/30 to-green-950/20 border border-green-900/50 shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <DollarSign className="h-3.5 w-3.5" />
+                      <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       <span>Prêmio Total</span>
                     </div>
-                    <p className="font-bold text-lg text-green-400">
+                    <p className="font-bold text-base sm:text-lg text-green-400">
                       {new Intl.NumberFormat("pt-BR", {
                         style: "currency",
                         currency: "BRL",
@@ -343,25 +347,25 @@ export function RenewalDetailModal({
 
               {/* Financial Info */}
               {renewal.notes && renewal.notes.includes("IOF") && (
-                <div className="mt-6 pt-6 border-t border-border/50">
-                  <div className="flex items-center gap-2.5 text-sm font-bold mb-4">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
-                      <DollarSign className="h-4 w-4 text-primary" />
+                <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/50">
+                  <div className="flex items-center gap-2 sm:gap-2.5 text-xs sm:text-sm font-bold mb-3 sm:mb-4">
+                    <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
+                      <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                     </div>
                     <span>Informações Financeiras</span>
                   </div>
-                  <div className="grid gap-3 md:grid-cols-3">
+                  <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                     {renewal.notes.split(" | ").map((note, idx) => {
                       if (note.includes("IOF") || note.includes("Prêmio Líquido") || note.includes("Comissão")) {
                         return (
                           <div
                             key={idx}
-                            className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-xl p-4 border border-border/50 hover:shadow-lg transition-all hover:-translate-y-0.5"
+                            className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border/50 hover:shadow-lg transition-all hover:-translate-y-0.5"
                           >
-                            <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
+                            <p className="text-xs font-medium text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wider">
                               {note.split(":")[0]}
                             </p>
-                            <p className="text-base font-bold text-foreground">{note.split(":")[1]?.trim()}</p>
+                            <p className="text-sm sm:text-base font-bold text-foreground break-words">{note.split(":")[1]?.trim()}</p>
                           </div>
                         );
                       }
@@ -373,13 +377,13 @@ export function RenewalDetailModal({
 
               {/* Other Notes */}
               {renewal.notes && (
-                <div className="mt-4 pt-4 border-t border-border">
-                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                    <Info className="h-4 w-4" />
+                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-medium mb-2">
+                    <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span>Observações</span>
                   </div>
-                  <div className="bg-muted/50 rounded-md p-3">
-                    <p className="text-sm">{renewal.notes}</p>
+                  <div className="bg-muted/50 rounded-md p-2.5 sm:p-3">
+                    <p className="text-xs sm:text-sm break-words">{renewal.notes}</p>
                   </div>
                 </div>
               )}
@@ -391,30 +395,30 @@ export function RenewalDetailModal({
         {showAllPolicies && onSelectPolicy && (
           <Card className="relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
-            <CardHeader className="pb-4 relative">
-              <CardTitle className="text-lg flex items-center gap-2.5">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
-                  <FileText className="h-4 w-4 text-primary" />
+            <CardHeader className="pb-3 sm:pb-4 relative">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2 sm:gap-2.5">
+                <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
+                  <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                 </div>
-                Todas as Apólices ({clientPolicies.length})
+                <span className="text-sm sm:text-base lg:text-lg">Todas as Apólices ({clientPolicies.length})</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="relative">
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {clientPolicies.map((policy) => {
                   const isSelected = policy.id === renewal.id;
                   return (
                     <div
                       key={policy.id}
                       onClick={() => onSelectPolicy(policy.id)}
-                      className={`p-4 rounded-xl border transition-all hover:shadow-md cursor-pointer ${
+                      className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border transition-all hover:shadow-md cursor-pointer ${
                         isSelected ? "ring-2 ring-primary" : ""
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
                         {isSelected && <span className="text-xs text-primary font-semibold">(Selecionada)</span>}
                       </div>
-                      <div className="space-y-1 text-sm text-muted-foreground">
+                      <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
                         {policy.policyNumber && (
                           <p>
                             <span className="font-medium">Apólice:</span> {policy.policyNumber}

@@ -50,11 +50,11 @@ export default function SettingsPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="mb-8">
-          <h1 className="text-4xl font-semibold tracking-tight mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-2">
             Configurações
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
             Gerencie as configurações do sistema
           </p>
         </div>
@@ -71,14 +71,14 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total de Clientes</p>
-                <p className="text-2xl font-semibold">{clients.length}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total de Clientes</p>
+                <p className="text-xl sm:text-2xl font-semibold">{clients.length}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total de Apólices</p>
-                <p className="text-2xl font-semibold">{policies.length}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total de Apólices</p>
+                <p className="text-xl sm:text-2xl font-semibold">{policies.length}</p>
               </div>
             </div>
           </CardContent>
@@ -96,11 +96,11 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-red-950/20 border border-red-900 rounded-lg">
-              <h3 className="font-semibold text-red-100 mb-2">
+            <div className="p-3 sm:p-4 bg-red-950/20 border border-red-900 rounded-lg">
+              <h3 className="text-sm sm:text-base font-semibold text-red-100 mb-2">
                 Limpar Todos os Dados
               </h3>
-              <p className="text-sm text-red-200 mb-4">
+              <p className="text-xs sm:text-sm text-red-200 mb-3 sm:mb-4">
                 Esta ação irá deletar permanentemente todos os clientes e apólices do sistema.
                 Esta ação não pode ser desfeita.
               </p>
@@ -175,13 +175,13 @@ export default function SettingsPage() {
           <CardContent>
               
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-medium flex items-center gap-2">
-                      <FileSpreadsheet className="h-4 w-4" />
-                      Exportar Clientes
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm sm:text-base font-medium flex items-center gap-2">
+                      <FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                      <span>Exportar Clientes</span>
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       Exportar todos os clientes para Excel
                     </p>
                   </div>
@@ -189,19 +189,20 @@ export default function SettingsPage() {
                     variant="outline" 
                     size="sm"
                     onClick={() => exportClientsToExcel(clients, policies)}
+                    className="w-full sm:w-auto shrink-0"
                   >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
                     Exportar
                   </Button>
                 </div>
                 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-medium flex items-center gap-2">
-                      <FileSpreadsheet className="h-4 w-4" />
-                      Exportar Renovações
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm sm:text-base font-medium flex items-center gap-2">
+                      <FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                      <span>Exportar Renovações</span>
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       Exportar todas as apólices para Excel
                     </p>
                   </div>
@@ -209,19 +210,20 @@ export default function SettingsPage() {
                     variant="outline" 
                     size="sm"
                     onClick={() => exportPoliciesToExcel(policies, clients)}
+                    className="w-full sm:w-auto shrink-0"
                   >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
                     Exportar
                   </Button>
                 </div>
                 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-medium flex items-center gap-2">
-                      <FileSpreadsheet className="h-4 w-4" />
-                      Exportar Dashboard Completo
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm sm:text-base font-medium flex items-center gap-2">
+                      <FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                      <span>Exportar Dashboard Completo</span>
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       Exportar estatísticas, clientes e apólices
                     </p>
                   </div>
@@ -232,8 +234,9 @@ export default function SettingsPage() {
                       const stats = computeDashboardStats(policies, clients);
                       exportDashboardToExcel(clients, policies, stats);
                     }}
+                    className="w-full sm:w-auto shrink-0"
                   >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
                     Exportar
                   </Button>
                 </div>

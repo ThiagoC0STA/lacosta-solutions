@@ -13,7 +13,7 @@ import {
   updatePolicy,
 } from "@/lib/supabase/queries";
 import type { Client, Policy } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 
 // ============================================
 // CLIENTS
@@ -23,22 +23,22 @@ export function useClients() {
   const queryClient = useQueryClient();
 
   const {
-    data: clients = [],
+    data: clients = [] as Client[],
     isLoading,
     error,
-  } = useQuery({
+  } = useQuery<Client[]>({
     queryKey: ["clients"],
-    queryFn: getClients,
-  });
+    queryFn: () => getClients(),
+  }) as UseQueryResult<Client[], Error>;
 
-  const createMutation = useMutation({
-    mutationFn: createClient,
+  const createMutation = useMutation<Client, Error, Client>({
+    mutationFn: (client) => createClient(client),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
     },
   });
 
-  const updateMutation = useMutation({
+  const updateMutation = useMutation<Client, Error, { id: string; data: Partial<Omit<Client, "id">> }>({
     mutationFn: ({
       id,
       data,
@@ -89,22 +89,22 @@ export function usePolicies() {
   const queryClient = useQueryClient();
 
   const {
-    data: policies = [],
+    data: policies = [] as Policy[],
     isLoading,
     error,
-  } = useQuery({
+  } = useQuery<Policy[]>({
     queryKey: ["policies"],
-    queryFn: getPolicies,
-  });
+    queryFn: () => getPolicies(),
+  }) as UseQueryResult<Policy[], Error>;
 
-  const createMutation = useMutation({
+  const createMutation = useMutation<Policy, Error, Omit<Policy, "id">>({
     mutationFn: createPolicy,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["policies"] });
     },
   });
 
-  const updateMutation = useMutation({
+  const updateMutation = useMutation<Policy, Error, { id: string; data: Partial<Omit<Policy, "id">> }>({
     mutationFn: ({
       id,
       data,
@@ -125,15 +125,15 @@ export function usePolicies() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: deletePolicy,
+  const deleteMutation = useMutation<void, Error, string>({
+    mutationFn: (id) => deletePolicy(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["policies"] });
     },
   });
 
-  const createBatchMutation = useMutation({
-    mutationFn: createPoliciesBatch,
+  const createBatchMutation = useMutation<Policy[], Error, Policy[]>({
+    mutationFn: (policies) => createPoliciesBatch(policies),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["policies"] });
     },

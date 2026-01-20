@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
 import { useClients, usePolicies } from "@/hooks/use-supabase-data";
@@ -27,7 +27,7 @@ import { classifyDueStatus } from "@/lib/date-helpers";
 import { cn } from "@/lib/utils";
 import { getStatusColor } from "@/lib/colors";
 
-export default function ClientsPage() {
+function ClientsPageContent() {
   const { clients, updateClient, deleteClient, createClient } = useClients();
   const { policies } = usePolicies();
   const searchParams = useSearchParams();
@@ -192,30 +192,23 @@ export default function ClientsPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
-                <UsersIcon className="h-7 w-7 text-primary" />
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
+                <UsersIcon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
                   Clientes
                 </h1>
-                <p className="text-muted-foreground text-lg mt-1">
+                <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mt-1">
                   Gerencie todos os seus clientes
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => exportClientsToExcel(clients as any, policies as any)}
-                className="shadow-md hover:shadow-lg"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
+            <div className="flex gap-2 sm:gap-3">
               <Button
                 onClick={() => {
                   setIsCreating(true);
@@ -223,7 +216,7 @@ export default function ClientsPage() {
                   setEditedClient({});
                   setSelectedClient(null);
                 }}
-                className="shadow-lg hover:shadow-xl"
+                className="shadow-lg hover:shadow-xl flex-1 sm:flex-none"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Cliente
@@ -239,11 +232,11 @@ export default function ClientsPage() {
               <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
                 <Filter className="h-5 w-5 text-muted-foreground" />
               </div>
-              <CardTitle className="text-xl">Filtros</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Filtros</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
                 <label className="text-sm font-semibold flex items-center gap-2">
                   <Search className="h-4 w-4" />
@@ -261,11 +254,11 @@ export default function ClientsPage() {
                   <Calendar className="h-4 w-4" />
                   Filtros Rápidos
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 mt-4 md:mt-0">
                   <Button
                     variant={birthdayFilter ? "default" : "outline"}
                     onClick={() => setBirthdayFilter(!birthdayFilter)}
-                    className="shadow-sm flex-1"
+                    className="shadow-sm flex-1 py-2"
                     size="sm"
                   >
                     <Gift className="h-4 w-4 mr-2" />
@@ -284,7 +277,7 @@ export default function ClientsPage() {
                         setSelectedClient(thisMonthClients[0]);
                       }
                     }}
-                    className="shadow-sm"
+                    className="shadow-sm flex-1 sm:flex-none py-2"
                     size="sm"
                   >
                     <UsersIcon className="h-4 w-4 mr-2" />
@@ -318,7 +311,7 @@ export default function ClientsPage() {
                       {headerGroup.headers.map((header) => (
                         <th
                           key={header.id}
-                          className="h-14 px-6 text-left align-middle font-bold text-xs text-muted-foreground uppercase tracking-wider whitespace-nowrap"
+                          className="h-12 sm:h-14 px-3 sm:px-4 lg:px-6 text-left align-middle font-bold text-xs text-muted-foreground uppercase tracking-wider whitespace-nowrap"
                         >
                           {header.isPlaceholder
                             ? null
@@ -357,7 +350,7 @@ export default function ClientsPage() {
                           onClick={() => setSelectedClient(row.original)}
                         >
                           {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id} className="px-6 py-4 text-sm whitespace-nowrap">
+                            <td key={cell.id} className="px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 text-xs sm:text-sm whitespace-nowrap">
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext()
@@ -372,9 +365,9 @@ export default function ClientsPage() {
             </div>
             
             {/* Pagination Controls */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border/30">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 sm:px-6 py-4 border-t border-border/30">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                   Mostrando {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} a{" "}
                   {Math.min(
                     (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
@@ -383,56 +376,77 @@ export default function ClientsPage() {
                   de {table.getFilteredRowModel().rows.length} clientes
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.setPageIndex(0)}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  Primeira
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                >
-                  Próxima
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                  disabled={!table.getCanNextPage()}
-                >
-                  Última
-                </Button>
-                <select
-                  value={table.getState().pagination.pageSize.toString()}
-                  onChange={(e) => {
-                    table.setPageSize(Number(e.target.value));
-                  }}
-                  className="ml-2 h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                  <option value="200">200</option>
-                </select>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.setPageIndex(0)}
+                    disabled={!table.getCanPreviousPage()}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Primeira
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-xs sm:text-sm text-muted-foreground px-2 whitespace-nowrap">
+                    Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Próxima
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                    disabled={!table.getCanNextPage()}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
+                  >
+                    Última
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Por página:</label>
+                  <select
+                    value={table.getState().pagination.pageSize.toString()}
+                    onChange={(e) => {
+                      table.setPageSize(Number(e.target.value));
+                    }}
+                    className="w-full sm:w-20 h-9 rounded-md border border-input bg-background px-2 sm:px-3 py-1 text-xs sm:text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                  </select>
+                </div>
               </div>
+            </div>
+            
+            {/* Export Button */}
+            <div className="px-4 sm:px-6 pb-4">
+              <Button
+                variant="outline"
+                onClick={() => exportClientsToExcel(clients as any, policies as any)}
+                className="w-full sm:w-auto shadow-md hover:shadow-lg"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exportar para Excel
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -447,16 +461,30 @@ export default function ClientsPage() {
           }
         }}>
           <DialogHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <User className="h-5 w-5 text-primary" />
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 pr-2">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  </div>
+                  <DialogTitle className="text-lg sm:text-xl lg:text-2xl truncate">
+                    {isCreating ? "Novo Cliente" : isEditing ? "Editar Cliente" : "Detalhes do Cliente"}
+                  </DialogTitle>
                 </div>
-                <DialogTitle className="text-2xl">
-                  {isCreating ? "Novo Cliente" : isEditing ? "Editar Cliente" : "Detalhes do Cliente"}
-                </DialogTitle>
+                <button
+                  onClick={() => {
+                    setSelectedClient(null);
+                    setIsCreating(false);
+                    setIsEditing(false);
+                    setEditedClient({});
+                  }}
+                  className="rounded-lg p-1.5 sm:p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 shrink-0 z-20"
+                  aria-label="Fechar"
+                >
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 {!isCreating && selectedClient && (
                   <>
                     {!isEditing ? (
@@ -557,6 +585,7 @@ export default function ClientsPage() {
                             phone: editedClient.phone,
                             email: editedClient.email,
                             birthday: editedClient.birthday,
+                            id: "",
                           });
                           setIsCreating(false);
                           setIsEditing(false);
@@ -585,40 +614,30 @@ export default function ClientsPage() {
                     </Button>
                   </div>
                 )}
-                <button
-                  onClick={() => {
-                    setSelectedClient(null);
-                    setIsCreating(false);
-                    setIsEditing(false);
-                    setEditedClient({});
-                  }}
-                  className="rounded-lg p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  <X className="h-5 w-5" />
-                </button>
               </div>
             </div>
           </DialogHeader>
           {(selectedClient || isCreating) && (
             <DialogContent className="space-y-6">
-              {/* Client Info Card */}
-              <Card className="relative overflow-hidden">
-                {/* Decorative accent */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
-                
-                <CardHeader className="pb-4 relative">
-                  <CardTitle className="text-lg flex items-center gap-2.5">
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
-                      <User className="h-4 w-4 text-primary" />
-                    </div>
-                    Informações do Cliente
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 relative">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+              {/* Client Info - Only show Card wrapper when viewing/editing existing client */}
+              {selectedClient && !isCreating ? (
+                <Card className="relative overflow-hidden">
+                  {/* Decorative accent */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+                  
+                  <CardHeader className="pb-3 sm:pb-4 relative">
+                    <CardTitle className="text-base sm:text-lg flex items-center gap-2 sm:gap-2.5">
+                      <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
+                        <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                      </div>
+                      <span className="text-sm sm:text-base lg:text-lg">Informações do Cliente</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 sm:space-y-4 relative">
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
+                    <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        <User className="h-3.5 w-3.5" />
+                        <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         <span>Nome</span>
                       </div>
                       {isEditing || isCreating ? (
@@ -648,9 +667,9 @@ export default function ClientsPage() {
                         <p className="font-semibold text-base">{selectedClient?.phone || "-"}</p>
                       )}
                     </div>
-                    <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                    <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        <Mail className="h-3.5 w-3.5" />
+                        <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         <span>Email</span>
                       </div>
                       {isEditing || isCreating ? (
@@ -666,7 +685,7 @@ export default function ClientsPage() {
                       )}
                     </div>
                     <div className={cn(
-                      "space-y-2 p-4 rounded-xl transition-all hover:shadow-md border",
+                      "space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl transition-all hover:shadow-md border",
                       !isEditing && !isCreating && selectedClient?.birthday ? (() => {
                         const isToday = selectedClient.birthday && new Date(selectedClient.birthday).getMonth() === new Date().getMonth() && new Date(selectedClient.birthday).getDate() === new Date().getDate();
                         const isThisMonth = isBirthdayThisMonth(selectedClient.birthday);
@@ -720,20 +739,20 @@ export default function ClientsPage() {
                     </div>
                     {selectedClient && (
                       <>
-                        <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                        <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            <FileText className="h-3.5 w-3.5" />
+                            <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             <span>Total de Apólices</span>
                           </div>
-                          <p className="font-semibold text-base">{selectedClient.policyCount}</p>
+                          <p className="font-semibold text-sm sm:text-base">{selectedClient.policyCount}</p>
                         </div>
                         {selectedClient.nextRenewalDate && (
-                          <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                          <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
                             <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                              <Calendar className="h-3.5 w-3.5" />
+                              <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               <span>Próxima Renovação</span>
                             </div>
-                            <p className="font-semibold text-base">{formatDate(selectedClient.nextRenewalDate)}</p>
+                            <p className="font-semibold text-sm sm:text-base">{formatDate(selectedClient.nextRenewalDate)}</p>
                           </div>
                         )}
                       </>
@@ -741,7 +760,7 @@ export default function ClientsPage() {
                   </div>
                   {selectedClient && selectedClient.phone && (
                     <Button
-                      className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl"
+                      className="w-full mt-3 sm:mt-4 bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl text-sm sm:text-base"
                       onClick={() => {
                         const phone = selectedClient.phone?.replace(/\D/g, "");
                         if (phone) {
@@ -749,12 +768,68 @@ export default function ClientsPage() {
                         }
                       }}
                     >
-                      <MessageCircle className="h-4 w-4 mr-2" />
+                      <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
                       Enviar WhatsApp
                     </Button>
                   )}
                 </CardContent>
               </Card>
+              ) : (
+                /* New Client Form - No Card wrapper */
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
+                    <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        <User className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                        <span>Nome</span>
+                      </div>
+                      <Input
+                        value={editedClient.name || ""}
+                        onChange={(e) => setEditedClient({ ...editedClient, name: e.target.value })}
+                        placeholder="Nome do cliente"
+                        className="font-semibold"
+                      />
+                    </div>
+                    <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        <Phone className="h-3.5 w-3.5" />
+                        <span>Telefone</span>
+                      </div>
+                      <Input
+                        value={editedClient.phone || ""}
+                        onChange={(e) => setEditedClient({ ...editedClient, phone: e.target.value })}
+                        placeholder="Telefone"
+                        className="font-semibold"
+                      />
+                    </div>
+                    <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                        <span>Email</span>
+                      </div>
+                      <Input
+                        type="email"
+                        value={editedClient.email || ""}
+                        onChange={(e) => setEditedClient({ ...editedClient, email: e.target.value })}
+                        placeholder="Email"
+                        className="font-semibold"
+                      />
+                    </div>
+                    <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Data de Nascimento</span>
+                      </div>
+                      <Input
+                        type="date"
+                        value={editedClient.birthday ? (typeof editedClient.birthday === "string" ? editedClient.birthday.split("T")[0] : new Date(editedClient.birthday).toISOString().split("T")[0]) : ""}
+                        onChange={(e) => setEditedClient({ ...editedClient, birthday: e.target.value ? new Date(e.target.value) : undefined })}
+                        className="font-semibold"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Policies Card */}
               {selectedClient && (
@@ -793,7 +868,7 @@ export default function ClientsPage() {
                             ? "bg-amber-950/40 border-amber-900"
                             : "bg-gradient-to-br from-muted/60 to-muted/40 border-border/50";
                           return (
-                            <div key={policy.id} className={`relative border rounded-xl p-4 ${statusColor} transition-all hover:shadow-xl hover:-translate-y-1 overflow-hidden`}>
+                            <div key={policy.id} className={`relative border rounded-lg sm:rounded-xl p-3 sm:p-4 ${statusColor} transition-all hover:shadow-xl hover:-translate-y-1 overflow-hidden`}>
                               {/* Hover accent */}
                               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 hover:opacity-100 transition-opacity" />
                               <div className="grid gap-3 md:grid-cols-3">
@@ -879,6 +954,20 @@ export default function ClientsPage() {
         </Dialog>
       </div>
     </AppLayout>
+  );
+}
+
+export default function ClientsPage() {
+  return (
+    <Suspense fallback={
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-muted-foreground">Carregando...</div>
+        </div>
+      </AppLayout>
+    }>
+      <ClientsPageContent />
+    </Suspense>
   );
 }
 

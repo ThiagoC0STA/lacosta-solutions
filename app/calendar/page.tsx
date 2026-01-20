@@ -12,12 +12,14 @@ import { cn } from "@/lib/utils";
 import type { RenewalWithClient } from "@/types";
 import type { Client } from "@/types";
 import { RenewalDetailModal } from "@/components/renewal-detail-modal";
+import { DayEventsModal } from "@/components/day-events-modal";
 
 export default function CalendarPage() {
   const { clients } = useClients();
   const { policies, updatePolicy, deletePolicy } = usePolicies();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   const renewalsWithClients = useMemo<RenewalWithClient[]>(() => {
     return policies.map((policy) => {
@@ -51,6 +53,45 @@ export default function CalendarPage() {
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
+
+  const handleDayClick = useCallback((day: number) => {
+    const month = currentDate.getMonth();
+    const year = currentDate.getFullYear();
+    const dayDate = new Date(year, month, day);
+    setSelectedDay(dayDate);
+  }, [currentDate]);
+
+  const handleBirthdayClick = useCallback((client: Client) => {
+    // Find first active policy for this client to show in modal
+    const clientRenewal = renewalsWithClients
+      .filter((r) => r.clientId === client.id && r.status === "active")
+      .sort((a, b) => {
+        const dateA = typeof a.dueDate === "string" ? new Date(a.dueDate) : a.dueDate;
+        const dateB = typeof b.dueDate === "string" ? new Date(b.dueDate) : b.dueDate;
+        return dateA.getTime() - dateB.getTime();
+      })[0];
+    
+    setSelectedDay(null);
+    
+    if (clientRenewal) {
+      setSelectedRenewal(clientRenewal);
+    } else {
+      // Create a dummy renewal just for modal display
+      const dummyRenewal: RenewalWithClient = {
+        id: `dummy-${client.id}`,
+        clientId: client.id,
+        policyNumber: "",
+        insurer: "",
+        product: "",
+        dueDate: new Date(),
+        premium: 0,
+        status: "active",
+        notes: "",
+        client: client,
+      };
+      setSelectedRenewal(dummyRenewal);
+    }
+  }, [renewalsWithClients]);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
   const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
   const firstDayOfWeek = firstDayOfMonth.getDay();
@@ -136,35 +177,36 @@ export default function CalendarPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
-                <CalendarIcon className="h-7 w-7 text-primary" />
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
+                <CalendarIcon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
                   Calendário
                 </h1>
-                <p className="text-muted-foreground text-lg mt-1">
+                <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mt-1">
                   Visualize renovações e aniversários por data
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={prevMonth}>
-                <ChevronLeft className="h-4 w-4" />
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <Button variant="outline" onClick={prevMonth} size="sm" className="text-xs sm:text-sm">
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
-              <div className="text-xl font-bold min-w-[200px] text-center">
+              <div className="text-base sm:text-lg lg:text-xl font-bold min-w-[150px] sm:min-w-[200px] text-center">
                 {monthNames[currentMonth]} {currentYear}
               </div>
-              <Button variant="outline" onClick={nextMonth}>
-                <ChevronRight className="h-4 w-4" />
+              <Button variant="outline" onClick={nextMonth} size="sm" className="text-xs sm:text-sm">
+                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setCurrentDate(new Date())}
-                className="ml-2"
+                size="sm"
+                className="text-xs sm:text-sm"
               >
                 Hoje
               </Button>
@@ -173,18 +215,18 @@ export default function CalendarPage() {
         </div>
 
         <Card className="shadow-lg">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-7 gap-2 mb-4">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-3 sm:mb-4">
               {weekDays.map((day) => (
                 <div
                   key={day}
-                  className="text-center text-sm font-bold text-muted-foreground py-2"
+                  className="text-center text-xs sm:text-sm font-bold text-muted-foreground py-1 sm:py-2"
                 >
                   {day}
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {days.map((day, index) => {
                 if (day === null) {
                   return <div key={`empty-${index}`} className="aspect-square" />;
@@ -196,65 +238,100 @@ export default function CalendarPage() {
                 const isPast = dayDate < today && !isToday(day);
                 const hasEvents = renewals.length > 0 || birthdays.length > 0;
 
+                // Get colors for indicators
+                const urgentRenewals = renewals.filter((r) => {
+                  const status = classifyDueStatus(r.dueDate);
+                  return status === "overdue" || status === "d7";
+                });
+                const hasUrgentRenewal = urgentRenewals.length > 0;
+                const hasBirthdayToday = birthdays.some((c) => isBirthdayToday(c.birthday));
+                const totalEvents = renewals.length + birthdays.length;
+
                 return (
                   <div
                     key={day}
+                    onClick={() => handleDayClick(day)}
                     className={cn(
-                      "aspect-square border rounded-lg p-2 transition-all hover:shadow-md",
+                      "aspect-square border rounded-md sm:rounded-lg p-1 sm:p-2 transition-all hover:shadow-md cursor-pointer relative group overflow-hidden",
                       isToday(day)
                         ? "border-primary bg-primary/5 shadow-md"
                         : isPast
                         ? "border-border/50 bg-muted/20"
                         : "border-border bg-card",
-                      hasEvents && "border-2"
+                      hasEvents && "border-2",
+                      hasUrgentRenewal && "border-red-500/50",
+                      hasBirthdayToday && "border-purple-500/50"
                     )}
                   >
-                    <div className="flex flex-col h-full">
-                      <div
-                        className={cn(
-                          "text-sm font-semibold mb-1",
-                          isToday(day) && "text-primary"
+                    <div className="flex flex-col h-full w-full overflow-hidden">
+                      <div className="flex items-center justify-between mb-0.5 sm:mb-1 shrink-0">
+                        <div
+                          className={cn(
+                            "text-xs sm:text-sm font-semibold",
+                            isToday(day) && "text-primary font-bold"
+                          )}
+                        >
+                          {day}
+                        </div>
+                        {/* Mobile: Total count badge */}
+                        {hasEvents && totalEvents > 1 && (
+                          <span className="sm:hidden text-[7px] font-bold text-muted-foreground bg-muted/50 px-0.5 py-0 rounded leading-none">
+                            {totalEvents}
+                          </span>
                         )}
-                      >
-                        {day}
                       </div>
-                      <div className="flex-1 overflow-hidden space-y-1">
+                      
+                      {/* Mobile: Show only colored dots */}
+                      {hasEvents && (
+                        <div className="flex-1 flex items-center justify-center gap-0.5 sm:hidden flex-wrap min-h-[12px] max-h-[16px] overflow-hidden px-0.5">
+                          {/* Birthday indicators */}
+                          {birthdays.length > 0 && (
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              {hasBirthdayToday ? (
+                                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-sm" />
+                              ) : (
+                                <div className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-sm" />
+                              )}
+                              {birthdays.length > 1 && (
+                                <span className="text-[6px] font-semibold text-purple-300 leading-none">
+                                  {birthdays.length}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Renewal indicators */}
+                          {renewals.length > 0 && (
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              {hasUrgentRenewal ? (
+                                <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm" />
+                              ) : (
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-sm" />
+                              )}
+                              {renewals.length > 1 && (
+                                <span className={cn(
+                                  "text-[6px] font-semibold leading-none",
+                                  hasUrgentRenewal ? "text-red-300" : "text-blue-300"
+                                )}>
+                                  {renewals.length}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Desktop: Show full event list */}
+                      <div className="hidden sm:flex flex-col flex-1 overflow-hidden space-y-0.5 sm:space-y-1">
                         {/* Birthdays first */}
                         {birthdays.slice(0, 2).map((client) => {
                           const isTodayBirthday = isBirthdayToday(client.birthday);
-                          // Find first active policy for this client to show in modal
-                          const clientRenewal = renewalsWithClients
-                            .filter((r) => r.clientId === client.id && r.status === "active")
-                            .sort((a, b) => {
-                              const dateA = typeof a.dueDate === "string" ? new Date(a.dueDate) : a.dueDate;
-                              const dateB = typeof b.dueDate === "string" ? new Date(b.dueDate) : b.dueDate;
-                              return dateA.getTime() - dateB.getTime();
-                            })[0];
-                          
                           return (
                             <div
                               key={`birthday-${client.id}`}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // If client has a renewal, show it. Otherwise create a dummy one for display
-                                if (clientRenewal) {
-                                  setSelectedRenewal(clientRenewal);
-                                } else {
-                                  // Create a dummy renewal just for modal display
-                                  const dummyRenewal: RenewalWithClient = {
-                                    id: `dummy-${client.id}`,
-                                    clientId: client.id,
-                                    policyNumber: "",
-                                    insurer: "",
-                                    product: "",
-                                    dueDate: new Date(),
-                                    premium: 0,
-                                    status: "active",
-                                    notes: "",
-                                    client: client,
-                                  };
-                                  setSelectedRenewal(dummyRenewal);
-                                }
+                                handleBirthdayClick(client);
                               }}
                               className={cn(
                                 "text-xs p-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1",
@@ -360,6 +437,35 @@ export default function CalendarPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Day Events Modal */}
+        {selectedDay && (() => {
+          const dayDate = selectedDay.getDate();
+          const dayMonth = selectedDay.getMonth();
+          const dayYear = selectedDay.getFullYear();
+          
+          // Get renewals for the selected day
+          const dateKey = `${dayYear}-${String(dayMonth + 1).padStart(2, "0")}-${String(dayDate).padStart(2, "0")}`;
+          const dayRenewals = renewalsByDate.get(dateKey) || [];
+          
+          // Get birthdays for the selected day
+          const dayBirthdays = birthdaysByDate.get(dateKey) || [];
+          
+          return (
+            <DayEventsModal
+              open={!!selectedDay}
+              onClose={() => setSelectedDay(null)}
+              date={selectedDay}
+              renewals={dayRenewals}
+              birthdays={dayBirthdays}
+              onRenewalClick={(renewal) => {
+                setSelectedDay(null);
+                setSelectedRenewal(renewal);
+              }}
+              onBirthdayClick={handleBirthdayClick}
+            />
+          );
+        })()}
 
         {/* Renewal Detail Modal */}
         <RenewalDetailModal

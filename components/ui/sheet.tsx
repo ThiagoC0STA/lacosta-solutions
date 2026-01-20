@@ -33,7 +33,7 @@ export function Sheet({ open, onOpenChange, children, side = "left" }: SheetProp
       />
       <div
         className={cn(
-          "fixed z-50 h-full w-80 bg-background shadow-lg transition-transform",
+          "fixed z-50 h-full w-64 sm:w-80 max-w-[85vw] bg-background shadow-lg transition-transform",
           side === "left" ? "left-0" : "right-0",
           open ? "translate-x-0" : side === "left" ? "-translate-x-full" : "translate-x-full"
         )}
