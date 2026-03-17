@@ -11,19 +11,24 @@ import { exportDashboardToExcel } from "@/lib/export-helpers";
 import { BarChart3, TrendingUp, DollarSign, FileText, Download, Users, AlertTriangle, Building2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
-// Helper function to extract commission from notes
+// Helper to extract commission from notes (prefers 15%, then 10%, then old format)
 function extractCommission(notes: string | undefined): number {
   if (!notes) return 0;
-  const commMatch = notes.match(/Comissão\s*:\s*R\$\s*([\d.]+,\d{2})/i);
-  if (commMatch && commMatch[1]) {
-    try {
-      const value = parseFloat(commMatch[1].replace(/\./g, "").replace(",", "."));
-      if (!isNaN(value) && value > 0) {
-        return value;
-      }
-    } catch (e) {
-      console.error("Error parsing Comissão:", e);
-    }
+  // Try Comissão 15%, then Comissão 10%, then legacy Comissão:
+  const comm15Match = notes.match(/Comissão\s+15%\s*:\s*R\$\s*([\d.,]+)/i);
+  if (comm15Match?.[1]) {
+    const val = parseFloat(comm15Match[1].replace(/\./g, "").replace(",", "."));
+    if (!isNaN(val) && val > 0) return val;
+  }
+  const comm10Match = notes.match(/Comissão\s+10%\s*:\s*R\$\s*([\d.,]+)/i);
+  if (comm10Match?.[1]) {
+    const val = parseFloat(comm10Match[1].replace(/\./g, "").replace(",", "."));
+    if (!isNaN(val) && val > 0) return val;
+  }
+  const legacyMatch = notes.match(/Comissão\s*:\s*R\$\s*([\d.,]+)/i);
+  if (legacyMatch?.[1]) {
+    const val = parseFloat(legacyMatch[1].replace(/\./g, "").replace(",", "."));
+    if (!isNaN(val) && val > 0) return val;
   }
   return 0;
 }
@@ -90,17 +95,13 @@ export default function ReportsPage() {
 
   const policiesByStatus = useMemo(() => {
     const policiesList: any[] = Array.isArray(policies) ? policies : [];
-    const statusCounts = {
-      active: policiesList.filter((p: any) => p.status === "active").length,
-      renewed: policiesList.filter((p: any) => p.status === "renewed").length,
-      lost: policiesList.filter((p: any) => p.status === "lost").length,
-    };
+    const activeCount = policiesList.filter((p: any) => p.status === "active").length;
+    const inactiveCount = policiesList.filter((p: any) => p.status !== "active").length;
     const total = policiesList.length;
     return [
-      { name: "Ativo", value: statusCounts.active, color: "#3b82f6", percent: total > 0 ? (statusCounts.active / total) * 100 : 0 },
-      { name: "Renovado", value: statusCounts.renewed, color: "#10b981", percent: total > 0 ? (statusCounts.renewed / total) * 100 : 0 },
-      { name: "Perdido", value: statusCounts.lost, color: "#ef4444", percent: total > 0 ? (statusCounts.lost / total) * 100 : 0 },
-    ].filter((item) => item.value > 0); // Only show slices with values > 0
+      { name: "Ativo", value: activeCount, color: "#3b82f6", percent: total > 0 ? (activeCount / total) * 100 : 0 },
+      { name: "Inativo", value: inactiveCount, color: "#6b7280", percent: total > 0 ? (inactiveCount / total) * 100 : 0 },
+    ].filter((item) => item.value > 0);
   }, [policies]);
   
   const policiesListLength = useMemo(() => {

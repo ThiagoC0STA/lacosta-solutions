@@ -28,7 +28,7 @@ import { BirthdaysModal } from "@/components/birthdays-modal";
 import { BirthdayDetailModal } from "@/components/birthday-detail-modal";
 
 export default function DashboardPage() {
-  const { clients } = useClients();
+  const { clients, updateClient } = useClients();
   const { policies, updatePolicy, deletePolicy } = usePolicies();
   const [showUrgentActions, setShowUrgentActions] = useState(false);
   const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
@@ -113,6 +113,16 @@ export default function DashboardPage() {
       setSelectedRenewal(renewal);
     }
   }, [renewalsWithClients]);
+
+  const handleUpdateClient = useCallback(async (clientId: string, data: Partial<{ name: string; phone?: string; email?: string; birthday?: Date | string }>) => {
+    const updated = await updateClient({ id: clientId, data });
+    if (selectedRenewal && selectedRenewal.clientId === clientId) {
+      setSelectedRenewal({
+        ...selectedRenewal,
+        client: { ...selectedRenewal.client, ...updated },
+      });
+    }
+  }, [updateClient, selectedRenewal]);
 
 
   const statCards = [
@@ -699,6 +709,7 @@ export default function DashboardPage() {
           renewal={selectedRenewal}
           onClose={() => setSelectedRenewal(null)}
           onUpdate={handleUpdateRenewal}
+          onUpdateClient={handleUpdateClient}
           onDelete={deletePolicy}
           allPolicies={Array.isArray(policies) ? policies : []}
           onSelectPolicy={handleSelectPolicy}

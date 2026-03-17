@@ -15,7 +15,7 @@ import { RenewalDetailModal } from "@/components/renewal-detail-modal";
 import { DayEventsModal } from "@/components/day-events-modal";
 
 export default function CalendarPage() {
-  const { clients } = useClients();
+  const { clients, updateClient } = useClients();
   const { policies, updatePolicy, deletePolicy } = usePolicies();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
@@ -50,6 +50,16 @@ export default function CalendarPage() {
       setSelectedRenewal(renewal);
     }
   }, [renewalsWithClients]);
+
+  const handleUpdateClient = useCallback(
+    async (clientId: string, data: Partial<{ name: string; phone?: string; email?: string; birthday?: Date | string }>) => {
+      const updated = await updateClient({ id: clientId, data });
+      if (selectedRenewal?.clientId === clientId) {
+        setSelectedRenewal({ ...selectedRenewal, client: { ...selectedRenewal.client, ...updated } });
+      }
+    },
+    [updateClient, selectedRenewal]
+  );
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -472,6 +482,7 @@ export default function CalendarPage() {
           renewal={selectedRenewal}
           onClose={() => setSelectedRenewal(null)}
           onUpdate={handleUpdateRenewal}
+          onUpdateClient={handleUpdateClient}
           onDelete={deletePolicy}
           allPolicies={policies}
           onSelectPolicy={handleSelectPolicy}

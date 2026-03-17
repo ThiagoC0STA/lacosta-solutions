@@ -25,10 +25,11 @@ import { exportPoliciesToExcel } from "@/lib/export-helpers";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { getStatusColor } from "@/lib/colors";
+import { calculateFromPremium } from "@/lib/insurance-calculations";
 import { RenewalDetailModal } from "@/components/renewal-detail-modal";
 
 export default function RenewalsPage() {
-  const { clients } = useClients();
+  const { clients, updateClient } = useClients();
   const { policies, updatePolicy, deletePolicy, createPolicy } = usePolicies();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "dueDate", desc: false },
@@ -79,6 +80,16 @@ export default function RenewalsPage() {
     }
   }, [renewalsWithClients]);
 
+  const handleUpdateClient = useCallback(
+    async (clientId: string, data: Partial<{ name: string; phone?: string; email?: string; birthday?: Date | string }>) => {
+      const updated = await updateClient({ id: clientId, data });
+      if (selectedRenewal?.clientId === clientId) {
+        setSelectedRenewal({ ...selectedRenewal, client: { ...selectedRenewal.client, ...updated } });
+      }
+    },
+    [updateClient, selectedRenewal]
+  );
+
   const filteredData = useMemo(() => {
     let filtered = renewalsWithClients;
 
@@ -95,9 +106,13 @@ export default function RenewalsPage() {
       );
     }
 
-    // Status filter
+    // Status filter (inactive includes renewed/lost for backward compat)
     if (statusFilter !== "all") {
-      filtered = filtered.filter((r) => r.status === statusFilter);
+      if (statusFilter === "active") {
+        filtered = filtered.filter((r) => r.status === "active");
+      } else {
+        filtered = filtered.filter((r) => r.status !== "active");
+      }
     }
 
     // Date range filter
@@ -325,23 +340,22 @@ export default function RenewalsPage() {
         accessorKey: "iof",
         header: "IOF",
         cell: ({ row }) => {
-          // Extract IOF from notes if exists
           const notes = row.original.notes || "";
-          // More flexible regex: matches "IOF: R$ 1.234,56" or "IOF: R$ 123,45" or "IOF:R$123,45"
-          const iofMatch = notes.match(/IOF\s*:\s*R\$\s*([\d.]+,\d{2})/i);
+          const iofMatch = notes.match(/IOF\s*:\s*R\$\s*([\d.,]+)/i);
           if (iofMatch && iofMatch[1]) {
             try {
-              // Convert Brazilian format (1.234,56) to number
               const value = parseFloat(iofMatch[1].replace(/\./g, "").replace(",", "."));
               if (!isNaN(value) && value > 0) {
-                return new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                }).format(value);
+                return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
               }
             } catch (e) {
-              console.error("Error parsing IOF:", e, "Match:", iofMatch, "Notes:", notes);
+              console.error("Error parsing IOF:", e);
             }
+          }
+          const premium = row.original.premium;
+          if (premium && premium > 0) {
+            const { iof } = calculateFromPremium(premium);
+            return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(iof);
           }
           return "-";
         },
@@ -350,46 +364,70 @@ export default function RenewalsPage() {
         accessorKey: "netPremium",
         header: "Prêmio Líquido",
         cell: ({ row }) => {
-          // Extract Prêmio Líquido from notes if exists
           const notes = row.original.notes || "";
-          // More flexible regex
-          const netMatch = notes.match(/Prêmio\s+Líquido\s*:\s*R\$\s*([\d.]+,\d{2})/i);
+          const netMatch = notes.match(/Prêmio\s+Líquido\s*:\s*R\$\s*([\d.,]+)/i);
           if (netMatch && netMatch[1]) {
             try {
               const value = parseFloat(netMatch[1].replace(/\./g, "").replace(",", "."));
               if (!isNaN(value) && value > 0) {
-                return new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                }).format(value);
+                return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
               }
             } catch (e) {
-              console.error("Error parsing Prêmio Líquido:", e, "Match:", netMatch);
+              console.error("Error parsing Prêmio Líquido:", e);
             }
+          }
+          const premium = row.original.premium;
+          if (premium && premium > 0) {
+            const { netPremium } = calculateFromPremium(premium);
+            return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(netPremium);
           }
           return "-";
         },
       },
       {
-        accessorKey: "commission",
-        header: "Comissão",
+        accessorKey: "commission10",
+        header: "Comissão 10%",
         cell: ({ row }) => {
-          // Extract Comissão from notes if exists
           const notes = row.original.notes || "";
-          // More flexible regex
-          const commMatch = notes.match(/Comissão\s*:\s*R\$\s*([\d.]+,\d{2})/i);
+          const commMatch = notes.match(/Comissão\s+10%\s*:\s*R\$\s*([\d.,]+)/i);
           if (commMatch && commMatch[1]) {
             try {
               const value = parseFloat(commMatch[1].replace(/\./g, "").replace(",", "."));
               if (!isNaN(value) && value > 0) {
-                return new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                }).format(value);
+                return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
               }
             } catch (e) {
-              console.error("Error parsing Comissão:", e, "Match:", commMatch);
+              console.error("Error parsing Comissão 10%:", e);
             }
+          }
+          const premium = row.original.premium;
+          if (premium && premium > 0) {
+            const { commission10 } = calculateFromPremium(premium);
+            return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(commission10);
+          }
+          return "-";
+        },
+      },
+      {
+        accessorKey: "commission15",
+        header: "Comissão 15%",
+        cell: ({ row }) => {
+          const notes = row.original.notes || "";
+          const commMatch = notes.match(/Comissão\s+15%\s*:\s*R\$\s*([\d.,]+)/i);
+          if (commMatch && commMatch[1]) {
+            try {
+              const value = parseFloat(commMatch[1].replace(/\./g, "").replace(",", "."));
+              if (!isNaN(value) && value > 0) {
+                return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+              }
+            } catch (e) {
+              console.error("Error parsing Comissão 15%:", e);
+            }
+          }
+          const premium = row.original.premium;
+          if (premium && premium > 0) {
+            const { commission15 } = calculateFromPremium(premium);
+            return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(commission15);
           }
           return "-";
         },
@@ -404,16 +442,14 @@ export default function RenewalsPage() {
               label: "Ativo",
               className: "bg-green-900/30 text-green-400 border-green-800",
             },
-            renewed: {
-              label: "Renovado",
-              className: "bg-blue-900/30 text-blue-400 border-blue-800",
-            },
-            lost: {
-              label: "Perdido",
+            inactive: {
+              label: "Inativo",
               className: "bg-gray-800 text-gray-400 border-gray-700",
             },
+            renewed: { label: "Inativo", className: "bg-gray-800 text-gray-400 border-gray-700" },
+            lost: { label: "Inativo", className: "bg-gray-800 text-gray-400 border-gray-700" },
           };
-          const statusConfig = statusLabels[status] || { label: status, className: "" };
+          const statusConfig = statusLabels[status] || { label: "Inativo", className: "bg-gray-800 text-gray-400 border-gray-700" };
           return (
             <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${statusConfig.className}`}>
               {statusConfig.label}
@@ -429,7 +465,8 @@ export default function RenewalsPage() {
           let notes = row.original.notes || "";
           notes = notes.replace(/IOF:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
           notes = notes.replace(/Prêmio Líquido:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
-          notes = notes.replace(/Comissão:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
+          notes = notes.replace(/Comissão\s+10%:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
+          notes = notes.replace(/Comissão\s+15%:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
           notes = notes.replace(/\s*\|\s*$/g, "").trim();
           return notes || "-";
         },
@@ -508,11 +545,11 @@ export default function RenewalsPage() {
                     variant="outline"
                     size="sm"
                     onClick={async () => {
-                      if (!confirm(`Marcar ${selectedRows.size} apólice(s) como renovada(s)?`)) return;
+                      if (!confirm(`Marcar ${selectedRows.size} apólice(s) como inativa(s)?`)) return;
                       try {
                         await Promise.all(
                           Array.from(selectedRows).map((id) =>
-                            updatePolicy({ id, data: { status: "renewed" as const } })
+                            updatePolicy({ id, data: { status: "inactive" as const } })
                           )
                         );
                         setSelectedRows(new Set());
@@ -523,7 +560,7 @@ export default function RenewalsPage() {
                     }}
                   >
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Marcar como Renovado
+                    Marcar como Inativo
                   </Button>
                   <Button
                     variant="destructive"
@@ -574,8 +611,7 @@ export default function RenewalsPage() {
                 >
                   <option value="all">Todos</option>
                   <option value="active">Ativo</option>
-                  <option value="renewed">Renovado</option>
-                  <option value="lost">Perdido</option>
+                  <option value="inactive">Inativo</option>
                 </Select>
               </div>
               <div className="space-y-2">
@@ -813,6 +849,7 @@ export default function RenewalsPage() {
           onClose={() => setSelectedRenewal(null)}
           onUpdate={handleUpdateRenewal}
           onDelete={deletePolicy}
+          onUpdateClient={handleUpdateClient}
           allPolicies={Array.isArray(policies) ? policies : []}
           onSelectPolicy={handleSelectPolicy}
         />
@@ -866,7 +903,7 @@ export default function RenewalsPage() {
                         product: newPolicy.product,
                         dueDate: typeof newPolicy.dueDate === "string" ? new Date(newPolicy.dueDate) : newPolicy.dueDate,
                         premium: newPolicy.premium,
-                        status: (newPolicy.status || "active") as "active" | "renewed" | "lost",
+                        status: (newPolicy.status || "active") as "active" | "inactive",
                         notes: newPolicy.notes,
                       });
                       setIsCreatingPolicy(false);
@@ -986,12 +1023,11 @@ export default function RenewalsPage() {
                     </div>
                     <Select
                       value={newPolicy.status || "active"}
-                      onChange={(e) => setNewPolicy({ ...newPolicy, status: e.target.value as "active" | "renewed" | "lost" })}
+                      onChange={(e) => setNewPolicy({ ...newPolicy, status: e.target.value as "active" | "inactive" })}
                       className="font-semibold w-full"
                     >
                       <option value="active">Ativo</option>
-                      <option value="renewed">Renovado</option>
-                      <option value="lost">Perdido</option>
+                      <option value="inactive">Inativo</option>
                     </Select>
                   </div>
                 </div>

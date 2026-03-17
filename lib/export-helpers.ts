@@ -46,7 +46,8 @@ export function exportPoliciesToExcel(policies: Policy[], clients: Client[]) {
     const notes = policy.notes || "";
     const iofMatch = notes.match(/IOF:\s*R\$\s*([\d.,]+)/i);
     const netMatch = notes.match(/Prêmio\s+Líquido:\s*R\$\s*([\d.,]+)/i);
-    const commMatch = notes.match(/Comissão:\s*R\$\s*([\d.,]+)/i);
+    const comm10Match = notes.match(/Comissão\s+10%:\s*R\$\s*([\d.,]+)/i);
+    const comm15Match = notes.match(/Comissão\s+15%:\s*R\$\s*([\d.,]+)/i);
     const plateMatch = notes.match(/Placa:\s*(\w+)/i);
 
     return {
@@ -65,10 +66,11 @@ export function exportPoliciesToExcel(policies: Policy[], clients: Client[]) {
         : "",
       IOF: iofMatch ? `R$ ${iofMatch[1]}` : "",
       "Prêmio Líquido": netMatch ? `R$ ${netMatch[1]}` : "",
-      Comissão: commMatch ? `R$ ${commMatch[1]}` : "",
+      "Comissão 10%": comm10Match ? `R$ ${comm10Match[1]}` : "",
+      "Comissão 15%": comm15Match ? `R$ ${comm15Match[1]}` : "",
       Placa: plateMatch ? plateMatch[1] : "",
-      Status: policy.status === "active" ? "Ativo" : policy.status === "renewed" ? "Renovado" : "Perdido",
-      Observações: notes.replace(/IOF:.*?\|/g, "").replace(/Prêmio Líquido:.*?\|/g, "").replace(/Comissão:.*?\|/g, "").replace(/Placa:.*?\|/g, "").replace(/\|/g, "").trim() || "",
+      Status: policy.status === "active" ? "Ativo" : "Inativo",
+      Observações: notes.replace(/IOF:.*?\|/g, "").replace(/Prêmio Líquido:.*?\|/g, "").replace(/Comissão(\s+\d+%)?:.*?\|/g, "").replace(/Placa:.*?\|/g, "").replace(/\|/g, "").trim() || "",
     };
   });
 
@@ -131,7 +133,7 @@ export function exportDashboardToExcel(
       Produto: policy.product || "",
       "Data de Vencimento": formatDate(dueDate),
       "Prêmio Total": policy.premium || "",
-      Status: policy.status === "active" ? "Ativo" : policy.status === "renewed" ? "Renovado" : "Perdido",
+      Status: policy.status === "active" ? "Ativo" : "Inativo",
     };
   });
   const policiesSheet = XLSX.utils.json_to_sheet(policiesData);

@@ -16,7 +16,7 @@ export const policySchema = z.object({
   product: z.string().optional(),
   dueDate: z.date(),
   premium: z.number().optional(),
-  status: z.enum(["active", "renewed", "lost"]).default("active"),
+  status: z.enum(["active", "inactive"]).default("active"),
   notes: z.string().optional(),
 });
 

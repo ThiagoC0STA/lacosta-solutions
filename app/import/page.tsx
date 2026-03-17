@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Upload, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import { parseDateFromExcel, parseExcelSerial, formatDateForStorage } from "@/lib/date-helpers";
+import { buildNotesFromFinancial } from "@/lib/insurance-calculations";
 import { useClients, usePolicies } from "@/hooks/use-supabase-data";
 import { getPoliciesWithClients, getClients } from "@/lib/supabase/queries";
 import type { Client, Policy } from "@/types";

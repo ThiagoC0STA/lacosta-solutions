@@ -938,8 +938,7 @@ function ClientsPageContent() {
                                     <span>Status</span>
                                   </div>
                                   <p className="text-sm font-semibold">
-                                    {policy.status === "active" ? "Ativo" : 
-                                     policy.status === "renewed" ? "Renovado" : "Perdido"}
+                                    {policy.status === "active" ? "Ativo" : "Inativo"}
                                   </p>
                                 </div>
                               </div>

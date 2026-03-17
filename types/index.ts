@@ -14,7 +14,7 @@ export interface Policy {
   product?: string;
   dueDate: Date | string;
   premium?: number;
-  status: "active" | "renewed" | "lost";
+  status: "active" | "inactive"; // renewed/lost for backward compat from DB
   notes?: string;
 }
 
