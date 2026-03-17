@@ -1,10 +1,9 @@
 /**
  * Insurance financial calculations for Brazil.
- * Based on Excel formulas:
+ * Formulas:
  * - Prêmio Líquido = Prêmio Total / (1 + IOF_rate)
  * - IOF = Prêmio Líquido × IOF_rate
- * - Comissão 10% = Prêmio Líquido × 10%
- * - Comissão 15% = Prêmio Líquido × 15%
+ * - Comissão = Prêmio Líquido × (rate / 100) — rate varies per policy (10%, 15%, 20%, 22%, etc.)
  */
 
 const IOF_RATE = 0.0738; // 7.38% - Brazil auto insurance IOF
@@ -12,18 +11,27 @@ const IOF_RATE = 0.0738; // 7.38% - Brazil auto insurance IOF
 export interface FinancialBreakdown {
   iof: number;
   netPremium: number;
-  commission10: number;
-  commission15: number;
+  commission: number;
+  commissionRate: number;
 }
 
-export function calculateFromPremium(premium: number): FinancialBreakdown {
-  // Prêmio Líquido = Prêmio Total / (1 + IOF_rate)
+/** Calculate commission from net premium and rate (e.g. 22 for 22%). */
+export function commissionFromRate(netPremium: number, ratePercent: number): number {
+  return Math.round((netPremium * (ratePercent / 100)) * 100) / 100;
+}
+
+/** Infer commission rate from value and net premium (rate = value / netPremium * 100). */
+export function rateFromCommission(value: number, netPremium: number): number {
+  if (netPremium <= 0) return 0;
+  return Math.round((value / netPremium) * 1000) / 10; // 1 decimal
+}
+
+export function calculateFromPremium(premium: number, commissionRatePercent?: number): FinancialBreakdown {
   const netPremium = Math.round((premium / (1 + IOF_RATE)) * 100) / 100;
-  // IOF = Prêmio Líquido × IOF_rate
   const iof = Math.round(netPremium * IOF_RATE * 100) / 100;
-  const commission10 = Math.round(netPremium * 0.1 * 100) / 100;
-  const commission15 = Math.round(netPremium * 0.15 * 100) / 100;
-  return { iof, netPremium, commission10, commission15 };
+  const rate = commissionRatePercent ?? 15; // default 15%
+  const commission = commissionFromRate(netPremium, rate);
+  return { iof, netPremium, commission, commissionRate: rate };
 }
 
 export function formatCurrencyBR(value: number): string {
@@ -53,10 +61,16 @@ export interface ParsedNotes {
   iof?: number;
   netPremium?: number;
   commission?: number;
+  commissionRate?: number;
   otherNotes?: string;
 }
 
-/** Parse policy notes to extract plate, IOF, netPremium, commission. */
+function parseMoney(str: string): number {
+  const val = parseFloat(str.replace(/\./g, "").replace(",", "."));
+  return isNaN(val) ? 0 : val;
+}
+
+/** Parse policy notes to extract plate, IOF, netPremium, commission, commissionRate. */
 export function parseNotesFromPolicy(notes: string | undefined): ParsedNotes {
   const result: ParsedNotes = {};
   if (!notes) return result;
@@ -65,34 +79,72 @@ export function parseNotesFromPolicy(notes: string | undefined): ParsedNotes {
   if (plateMatch) result.plate = plateMatch[1].trim();
 
   const iofMatch = notes.match(/IOF:\s*R\$\s*([\d.,]+)/i);
-  if (iofMatch) {
-    const val = parseFloat(iofMatch[1].replace(/\./g, "").replace(",", "."));
-    if (!isNaN(val)) result.iof = val;
-  }
+  if (iofMatch) result.iof = parseMoney(iofMatch[1]);
 
   const netMatch = notes.match(/Prêmio\s+Líquido:\s*R\$\s*([\d.,]+)/i);
-  if (netMatch) {
-    const val = parseFloat(netMatch[1].replace(/\./g, "").replace(",", "."));
-    if (!isNaN(val)) result.netPremium = val;
-  }
+  if (netMatch) result.netPremium = parseMoney(netMatch[1]);
 
-  const commMatch = notes.match(/Comissão:\s*R\$\s*([\d.,]+)/i);
-  if (commMatch) {
-    const val = parseFloat(commMatch[1].replace(/\./g, "").replace(",", "."));
-    if (!isNaN(val)) result.commission = val;
+  // New format: Comissão 22%: R$ 374,63
+  const commRateMatch = notes.match(/Comissão\s+(\d+(?:[.,]\d+)?)%\s*:\s*R\$\s*([\d.,]+)/i);
+  if (commRateMatch) {
+    result.commissionRate = parseFloat(commRateMatch[1].replace(",", ".")) || 0;
+    result.commission = parseMoney(commRateMatch[2]);
+  } else {
+    // Legacy: Comissão: R$ 374,63 (Excel import)
+    const commMatch = notes.match(/Comissão\s*:\s*R\$\s*([\d.,]+)/i);
+    if (commMatch) {
+      result.commission = parseMoney(commMatch[1]);
+    }
   }
 
   return result;
 }
 
-/** Build notes string from premium (recalculates IOF, netPremium, commissions) and optional plate. */
-export function buildNotesFromFinancial(premium: number, plate?: string): string {
-  const { iof, netPremium, commission10, commission15 } = calculateFromPremium(premium);
+/** Get commission value for reports/totals. Supports new and legacy formats. */
+export function getCommissionFromNotes(
+  notes: string | undefined,
+  premium?: number
+): number {
+  const parsed = parseNotesFromPolicy(notes);
+  if (parsed.commission != null && parsed.commission > 0) return parsed.commission;
+  if (premium && premium > 0) {
+    const { commission } = calculateFromPremium(premium);
+    return commission;
+  }
+  return 0;
+}
+
+/** Build notes with IOF, Prêmio Líquido, Comissão (value + rate). */
+export function buildNotesWithCommission(
+  premium: number,
+  plate?: string,
+  commissionValue?: number,
+  commissionRatePercent?: number
+): string {
+  const { iof, netPremium } = calculateFromPremium(premium);
   const parts: string[] = [];
   if (plate) parts.push(`Placa: ${plate}`);
   parts.push(`IOF: R$ ${formatCurrencyBR(iof)}`);
   parts.push(`Prêmio Líquido: R$ ${formatCurrencyBR(netPremium)}`);
-  parts.push(`Comissão 10%: R$ ${formatCurrencyBR(commission10)}`);
-  parts.push(`Comissão 15%: R$ ${formatCurrencyBR(commission15)}`);
+
+  let commission = commissionValue;
+  let rate = commissionRatePercent;
+  if (commission != null && rate != null) {
+    // Use both as provided
+  } else if (rate != null) {
+    commission = commissionFromRate(netPremium, rate);
+  } else if (commission != null && netPremium > 0) {
+    rate = rateFromCommission(commission, netPremium);
+  } else {
+    rate = 15;
+    commission = commissionFromRate(netPremium, rate);
+  }
+  parts.push(`Comissão ${rate}%: R$ ${formatCurrencyBR(commission ?? 0)}`);
+
   return parts.join(" | ");
+}
+
+/** @deprecated Use buildNotesWithCommission. Kept for backwards compat. */
+export function buildNotesFromFinancial(premium: number, plate?: string): string {
+  return buildNotesWithCommission(premium, plate);
 }

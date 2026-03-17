@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Upload, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import { parseDateFromExcel, parseExcelSerial, formatDateForStorage } from "@/lib/date-helpers";
-import { buildNotesFromFinancial } from "@/lib/insurance-calculations";
+import { buildNotesWithCommission } from "@/lib/insurance-calculations";
+import { extractCommissionRateFromFormula } from "@/lib/excel-formula-helpers";
 import { useClients, usePolicies } from "@/hooks/use-supabase-data";
 import { getPoliciesWithClients, getClients } from "@/lib/supabase/queries";
 import type { Client, Policy } from "@/types";
@@ -29,6 +30,7 @@ interface ProcessedRow {
   iof?: number;
   netPremium?: number; // Prêmio Líquido
   commission?: number; // Comissão
+  commissionRate?: number | null; // % e.g. 25 for 25%
   cpfCnpj?: string;
   plate?: string;
   uniqueKey: string; // CPF/CNPJ + VENCIMENTO ou PLACA + VENCIMENTO
@@ -350,6 +352,11 @@ export default function ImportPage() {
           console.log(`\n✓ Melhor resultado: Planilha "${bestSheet}", linha ${bestHeaderRow} (score: ${bestScore})`);
           console.log("Headers encontrados:", bestArrayData[bestHeaderRow].filter(c => c));
           
+          const headerRow = bestArrayData[bestHeaderRow];
+          const commissionColIndex = headerRow.findIndex((h: unknown) =>
+            String(h || "").toLowerCase().includes("comissao")
+          );
+          
           // Now read with the correct sheet and header row - read COMPLETE sheet
           // Use raw: false to get calculated values from formulas (Excel formulas are already calculated)
           const worksheet = workbook.Sheets[bestSheet];
@@ -506,11 +513,16 @@ export default function ImportPage() {
           });
           const emptyRowsSkipped = jsonData.length - rowsWithData.length;
 
-          // Process rows
+          // Process rows (use jsonData.forEach to have rowIndex for formula cell lookup)
           const processedRows: ProcessedRow[] = [];
           let validationSkipped = 0;
 
-          rowsWithData.forEach((row) => {
+          jsonData.forEach((row, rowIndex) => {
+            // Skip empty rows
+            const values = Object.values(row);
+            if (!values.some((v) => v !== undefined && v !== null && String(v).trim() !== "")) {
+              return;
+            }
             // Get client name or use email as fallback
             let clientName = String(row[columnMapping.clientName] || "").trim();
             
@@ -639,6 +651,19 @@ export default function ImportPage() {
             const commissionValue = columnMapping.commission ? row[columnMapping.commission] : undefined;
             const commission = parseNumericValue(commissionValue);
             
+            // Extract commission rate from Excel formula if present
+            let commissionRate: number | null = null;
+            if (commissionColIndex >= 0) {
+              const cellRef = XLSX.utils.encode_cell({ r: bestHeaderRow + 1 + rowIndex, c: commissionColIndex });
+              const cell = worksheet[cellRef];
+              if (cell?.f) {
+                commissionRate = extractCommissionRateFromFormula(cell.f);
+              }
+            }
+            if (commission != null && commission > 0 && commissionRate == null && (netPremium ?? 0) > 0) {
+              commissionRate = Math.round((commission / (netPremium ?? 0)) * 1000) / 10;
+            }
+            
             const cpfCnpj = columnMapping.cpfCnpj ? String(row[columnMapping.cpfCnpj] || "").trim() : undefined;
             const plate = columnMapping.plate ? String(row[columnMapping.plate] || "").trim() : undefined;
 
@@ -661,6 +686,7 @@ export default function ImportPage() {
               iof: isNaN(iof || 0) ? undefined : iof,
               netPremium: isNaN(netPremium || 0) ? undefined : netPremium,
               commission: isNaN(commission || 0) ? undefined : commission,
+              commissionRate,
               cpfCnpj,
               plate,
               uniqueKey,
@@ -862,38 +888,13 @@ export default function ImportPage() {
             if (!clientId) return;
 
             rows.forEach((row) => {
-              // Helper to format currency in Brazilian format
-              const formatCurrency = (value: number): string => {
-                // First format with 2 decimals
-                const parts = value.toFixed(2).split(".");
-                const integerPart = parts[0];
-                const decimalPart = parts[1];
-                
-                // Add thousand separators to integer part
-                const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                
-                // Return in Brazilian format: "1.234,56"
-                return `${formattedInteger},${decimalPart}`;
-              };
-              
-              // Build notes with all additional information
-              const notesParts: string[] = [];
-              if (row.plate) notesParts.push(`Placa: ${row.plate}`);
-              
-              // Save values - only if they are valid numbers and reasonable (not Excel serial dates)
-              // Values should be reasonable monetary amounts (less than 1 billion)
-              if (row.iof !== undefined && !isNaN(row.iof) && row.iof >= 0 && row.iof < 1e9) {
-                notesParts.push(`IOF: R$ ${formatCurrency(row.iof)}`);
-              }
-              if (row.netPremium !== undefined && !isNaN(row.netPremium) && row.netPremium >= 0 && row.netPremium < 1e9) {
-                notesParts.push(`Prêmio Líquido: R$ ${formatCurrency(row.netPremium)}`);
-              }
-              if (row.commission !== undefined && !isNaN(row.commission) && row.commission >= 0 && row.commission < 1e9) {
-                notesParts.push(`Comissão: R$ ${formatCurrency(row.commission)}`);
-              }
-              
-              const finalNotes = notesParts.length > 0 ? notesParts.join(" | ") : undefined;
-              
+              const notes = buildNotesWithCommission(
+                row.premium ?? 0,
+                row.plate,
+                row.commission,
+                row.commissionRate ?? 15
+              );
+
               policiesToCreate.push({
                 clientId,
                 policyNumber: row.cpfCnpj || row.plate || undefined,
@@ -902,7 +903,7 @@ export default function ImportPage() {
                 dueDate: row.dueDate,
                 premium: row.premium,
                 status: "active",
-                notes: finalNotes,
+                notes,
               });
             });
       });

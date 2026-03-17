@@ -25,7 +25,7 @@ import { exportPoliciesToExcel } from "@/lib/export-helpers";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { getStatusColor } from "@/lib/colors";
-import { calculateFromPremium } from "@/lib/insurance-calculations";
+import { calculateFromPremium, getCommissionFromNotes, parseNotesFromPolicy } from "@/lib/insurance-calculations";
 import { RenewalDetailModal } from "@/components/renewal-detail-modal";
 
 export default function RenewalsPage() {
@@ -385,49 +385,26 @@ export default function RenewalsPage() {
         },
       },
       {
-        accessorKey: "commission10",
-        header: "Comissão 10%",
+        accessorKey: "commissionRate",
+        header: "Comissão %",
         cell: ({ row }) => {
-          const notes = row.original.notes || "";
-          const commMatch = notes.match(/Comissão\s+10%\s*:\s*R\$\s*([\d.,]+)/i);
-          if (commMatch && commMatch[1]) {
-            try {
-              const value = parseFloat(commMatch[1].replace(/\./g, "").replace(",", "."));
-              if (!isNaN(value) && value > 0) {
-                return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-              }
-            } catch (e) {
-              console.error("Error parsing Comissão 10%:", e);
-            }
-          }
-          const premium = row.original.premium;
-          if (premium && premium > 0) {
-            const { commission10 } = calculateFromPremium(premium);
-            return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(commission10);
-          }
-          return "-";
+          const policy = row.original;
+          const parsed = parseNotesFromPolicy(policy.notes);
+          const displayRate = parsed.commissionRate ?? (policy.premium && policy.premium > 0 ? 15 : 0);
+          return (
+            <span className="text-muted-foreground font-medium">
+              {displayRate ? `${displayRate}%` : "-"}
+            </span>
+          );
         },
       },
       {
-        accessorKey: "commission15",
-        header: "Comissão 15%",
+        accessorKey: "commission",
+        header: "Comissão R$",
         cell: ({ row }) => {
-          const notes = row.original.notes || "";
-          const commMatch = notes.match(/Comissão\s+15%\s*:\s*R\$\s*([\d.,]+)/i);
-          if (commMatch && commMatch[1]) {
-            try {
-              const value = parseFloat(commMatch[1].replace(/\./g, "").replace(",", "."));
-              if (!isNaN(value) && value > 0) {
-                return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-              }
-            } catch (e) {
-              console.error("Error parsing Comissão 15%:", e);
-            }
-          }
-          const premium = row.original.premium;
-          if (premium && premium > 0) {
-            const { commission15 } = calculateFromPremium(premium);
-            return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(commission15);
+          const commission = getCommissionFromNotes(row.original.notes, row.original.premium);
+          if (commission > 0) {
+            return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(commission);
           }
           return "-";
         },
@@ -465,14 +442,14 @@ export default function RenewalsPage() {
           let notes = row.original.notes || "";
           notes = notes.replace(/IOF:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
           notes = notes.replace(/Prêmio Líquido:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
-          notes = notes.replace(/Comissão\s+10%:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
-          notes = notes.replace(/Comissão\s+15%:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
+          notes = notes.replace(/Comissão\s+\d+(?:[.,]\d+)?%:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
+          notes = notes.replace(/Comissão\s*:\s*R\$\s*[\d.,]+\s*\|\s*/g, "");
           notes = notes.replace(/\s*\|\s*$/g, "").trim();
           return notes || "-";
         },
       },
     ],
-    [isSelectMode, selectedRows, filteredData]
+    [isSelectMode, selectedRows, filteredData, updatePolicy]
   );
 
   const table = useReactTable({

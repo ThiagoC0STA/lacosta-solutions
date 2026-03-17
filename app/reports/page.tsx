@@ -8,50 +8,13 @@ import { useClients, usePolicies } from "@/hooks/use-supabase-data";
 import { computeDashboardStats } from "@/lib/dashboard-helpers";
 import { toLocalDate } from "@/lib/date-helpers";
 import { exportDashboardToExcel } from "@/lib/export-helpers";
-import { calculateFromPremium } from "@/lib/insurance-calculations";
+import { calculateFromPremium, getCommissionFromNotes } from "@/lib/insurance-calculations";
 import { BarChart3, TrendingUp, DollarSign, FileText, Download, Users, Building2, Calendar } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-// Get commission for a policy: from notes or calculated from premium (15% as default)
-function getCommission15(policy: { notes?: string; premium?: number }): number {
-  if (!policy.notes) {
-    if (policy.premium && policy.premium > 0) {
-      return calculateFromPremium(policy.premium).commission15;
-    }
-    return 0;
-  }
-  const comm15Match = policy.notes.match(/Comissão\s+15%\s*:\s*R\$\s*([\d.,]+)/i);
-  if (comm15Match?.[1]) {
-    const val = parseFloat(comm15Match[1].replace(/\./g, "").replace(",", "."));
-    if (!isNaN(val) && val > 0) return val;
-  }
-  const legacyMatch = policy.notes.match(/Comissão\s*:\s*R\$\s*([\d.,]+)/i);
-  if (legacyMatch?.[1]) {
-    const val = parseFloat(legacyMatch[1].replace(/\./g, "").replace(",", "."));
-    if (!isNaN(val) && val > 0) return val;
-  }
-  if (policy.premium && policy.premium > 0) {
-    return calculateFromPremium(policy.premium).commission15;
-  }
-  return 0;
-}
-
-function getCommission10(policy: { notes?: string; premium?: number }): number {
-  if (!policy.notes) {
-    if (policy.premium && policy.premium > 0) {
-      return calculateFromPremium(policy.premium).commission10;
-    }
-    return 0;
-  }
-  const comm10Match = policy.notes.match(/Comissão\s+10%\s*:\s*R\$\s*([\d.,]+)/i);
-  if (comm10Match?.[1]) {
-    const val = parseFloat(comm10Match[1].replace(/\./g, "").replace(",", "."));
-    if (!isNaN(val) && val > 0) return val;
-  }
-  if (policy.premium && policy.premium > 0) {
-    return calculateFromPremium(policy.premium).commission10;
-  }
-  return 0;
+// Get commission for a policy: from notes (variable %) or calculated from premium (15% default)
+function getCommission(policy: { notes?: string; premium?: number }): number {
+  return getCommissionFromNotes(policy.notes, policy.premium);
 }
 
 type PeriodFilter = "1m" | "6m" | "1y";
@@ -91,29 +54,23 @@ export default function ReportsPage() {
     }, 0);
   }, [activePolicies, currentMonth, currentYear, periodMonths]);
 
-  // Commission in period (15% - policies that expire in the selected period)
+  // Commission in period (policies that expire in the selected period)
   const commissionInPeriod = useMemo(() => {
     return activePolicies.reduce((sum: number, p: any) => {
       const dueDate = toLocalDate(p.dueDate);
       const today = new Date(currentYear, currentMonth, 1);
       const endDate = new Date(currentYear, currentMonth + periodMonths, 0);
       if (dueDate >= today && dueDate <= endDate) {
-        return sum + getCommission15(p);
+        return sum + getCommission(p);
       }
       return sum;
     }, 0);
   }, [activePolicies, currentMonth, currentYear, periodMonths]);
 
-  // Total commission 10% and 15%
-  const totalCommission10 = useMemo(() => {
-    return activePolicies.reduce((sum: number, p: any) => sum + getCommission10(p), 0);
+  // Total commission (variable % per policy)
+  const totalCommission = useMemo(() => {
+    return activePolicies.reduce((sum: number, p: any) => sum + getCommission(p), 0);
   }, [activePolicies]);
-
-  const totalCommission15 = useMemo(() => {
-    return activePolicies.reduce((sum: number, p: any) => sum + getCommission15(p), 0);
-  }, [activePolicies]);
-
-  const totalCommission = totalCommission15;
 
   // Prêmio Líquido and IOF totals (calculated from premium)
   const { totalNetPremium, totalIOF } = useMemo(() => {
@@ -424,35 +381,17 @@ export default function ReportsPage() {
           <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Comissão 10%</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Comissão Total</p>
                 <p className="text-xl sm:text-2xl font-bold">
                   {new Intl.NumberFormat("pt-BR", {
                     style: "currency",
                     currency: "BRL",
                     maximumFractionDigits: 0,
-                  }).format(totalCommission10)}
+                  }).format(totalCommission)}
                 </p>
               </div>
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
                 <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4 sm:p-5 lg:p-6 border border-border bg-card shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Comissão 15%</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                    maximumFractionDigits: 0,
-                  }).format(totalCommission15)}
-                </p>
-              </div>
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
               </div>
             </div>
           </Card>

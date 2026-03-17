@@ -23,12 +23,13 @@ import {
   MessageCircle,
   Car,
 } from "lucide-react";
+import { UnsavedChangesModal } from "@/components/unsaved-changes-modal";
 import type { RenewalWithClient } from "@/types";
 import { formatDate } from "@/lib/date-helpers";
 import {
   calculateFromPremium,
   parseNotesFromPolicy,
-  buildNotesFromFinancial,
+  buildNotesWithCommission,
   formatCurrency,
   parseBRLToNumber,
   formatBRLForInput,
@@ -56,6 +57,7 @@ export function RenewalDetailModal({
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Partial<RenewalWithClient>>({});
   const [editedPlate, setEditedPlate] = useState<string>("");
+  const [editedCommissionRate, setEditedCommissionRate] = useState<number>(15);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
@@ -76,8 +78,10 @@ export function RenewalDetailModal({
       (editedData.premium ?? renewal.premium ?? 0) !== (renewal.premium ?? 0) ||
       (editedData.status === "active" ? "active" : "inactive") !== (renewal.status === "active" ? "active" : "inactive");
     const plateChanged = (editedPlate || "") !== (parseNotesFromPolicy(renewal.notes).plate || "");
-    return clientChanged || policyChanged || plateChanged;
-  }, [renewal, isEditing, editedData, editedPlate]);
+    const commissionRateChanged =
+      editedCommissionRate !== (parseNotesFromPolicy(renewal.notes).commissionRate ?? 15);
+    return clientChanged || policyChanged || plateChanged || commissionRateChanged;
+  }, [renewal, isEditing, editedData, editedPlate, editedCommissionRate]);
 
   const requestClose = useCallback(() => {
     if (hasUnsavedChanges()) {
@@ -93,6 +97,7 @@ export function RenewalDetailModal({
       setEditedData({ ...renewal });
       const parsed = parseNotesFromPolicy(renewal.notes);
       setEditedPlate(parsed.plate || "");
+      setEditedCommissionRate(parsed.commissionRate ?? 15);
     }
   }, [renewal]);
 
@@ -100,6 +105,7 @@ export function RenewalDetailModal({
     setIsEditing(false);
     setEditedData({});
     setEditedPlate("");
+    setEditedCommissionRate(15);
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -123,7 +129,7 @@ export function RenewalDetailModal({
       const premium = editedData.premium ?? renewal.premium;
       let notes = editedData.notes;
       if (premium != null && premium > 0) {
-        notes = buildNotesFromFinancial(premium, editedPlate.trim() || undefined);
+        notes = buildNotesWithCommission(premium, editedPlate.trim() || undefined, undefined, editedCommissionRate);
       }
       const status = editedData.status === "active" ? "active" : "inactive";
       await onUpdate(renewal.id, {
@@ -138,12 +144,13 @@ export function RenewalDetailModal({
       setIsEditing(false);
       setEditedData({});
       setEditedPlate("");
+      setEditedCommissionRate(15);
     } catch (error) {
       alert(`Erro ao salvar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
     } finally {
       setIsSaving(false);
     }
-  }, [renewal, editedData, editedPlate, onUpdate, onUpdateClient]);
+  }, [renewal, editedData, editedPlate, editedCommissionRate, onUpdate, onUpdateClient]);
 
   const handleCloseAndSave = useCallback(async () => {
     setShowCloseConfirm(false);
@@ -510,18 +517,14 @@ export function RenewalDetailModal({
                 </div>
               </div>
 
-              {/* Financial Info - recalculates when editing and premium changes */}
+              {/* Financial Info - recalculates when editing; commission rate editable when editing */}
               {(() => {
                 const prem = isEditing ? (editedData.premium ?? renewal.premium) : renewal.premium;
                 const hasFinancial = prem && prem > 0;
                 if (!hasFinancial) return null;
-                const { iof, netPremium, commission10, commission15 } = calculateFromPremium(prem);
-                const items = [
-                  { label: "IOF", value: formatCurrency(iof) },
-                  { label: "Prêmio Líquido", value: formatCurrency(netPremium) },
-                  { label: "Comissão 10%", value: formatCurrency(commission10) },
-                  { label: "Comissão 15%", value: formatCurrency(commission15) },
-                ];
+                const parsed = parseNotesFromPolicy(renewal.notes);
+                const rate = isEditing ? editedCommissionRate : (parsed.commissionRate ?? 15);
+                const { iof, netPremium, commission } = calculateFromPremium(prem, rate);
                 return (
                   <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/50">
                     <div className="flex items-center gap-2 sm:gap-2.5 text-xs sm:text-sm font-bold mb-3 sm:mb-4">
@@ -531,17 +534,37 @@ export function RenewalDetailModal({
                       <span>Informações Financeiras{isEditing && prem ? " (recalculado)" : ""}</span>
                     </div>
                     <div className="grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-2 md:grid-cols-4">
-                      {items.map((item) => (
-                        <div
-                          key={item.label}
-                          className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border/50 hover:shadow-lg transition-all hover:-translate-y-0.5"
-                        >
-                          <p className="text-xs font-medium text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wider">
-                            {item.label}
-                          </p>
-                          <p className="text-sm sm:text-base font-bold text-foreground break-words">{item.value}</p>
-                        </div>
-                      ))}
+                      <div className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border/50 hover:shadow-lg transition-all hover:-translate-y-0.5">
+                        <p className="text-xs font-medium text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wider">IOF</p>
+                        <p className="text-sm sm:text-base font-bold text-foreground break-words">{formatCurrency(iof)}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border/50 hover:shadow-lg transition-all hover:-translate-y-0.5">
+                        <p className="text-xs font-medium text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wider">Prêmio Líquido</p>
+                        <p className="text-sm sm:text-base font-bold text-foreground break-words">{formatCurrency(netPremium)}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border/50 hover:shadow-lg transition-all hover:-translate-y-0.5">
+                        <p className="text-xs font-medium text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wider">Comissão %</p>
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.5}
+                            value={editedCommissionRate}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val) && val >= 0 && val <= 100) setEditedCommissionRate(val);
+                            }}
+                            className="h-8 w-20 text-sm font-bold bg-background"
+                          />
+                        ) : (
+                          <p className="text-sm sm:text-base font-bold text-foreground break-words">{rate}%</p>
+                        )}
+                      </div>
+                      <div className="bg-gradient-to-br from-muted/60 to-muted/40 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border/50 hover:shadow-lg transition-all hover:-translate-y-0.5">
+                        <p className="text-xs font-medium text-muted-foreground mb-1.5 sm:mb-2 uppercase tracking-wider">Comissão R$</p>
+                        <p className="text-sm sm:text-base font-bold text-foreground break-words">{formatCurrency(commission)}</p>
+                      </div>
                     </div>
                   </div>
                 );
@@ -609,29 +632,13 @@ export function RenewalDetailModal({
         )}
       </DialogContent>
 
-      {/* Close confirmation when has unsaved changes */}
-      <Dialog open={showCloseConfirm} onOpenChange={(open) => !open && setShowCloseConfirm(false)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Alterações não salvas</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground mb-4">
-            Você tem alterações não salvas. O que deseja fazer?
-          </p>
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => setShowCloseConfirm(false)}>
-              Cancelar
-            </Button>
-            <Button variant="outline" onClick={handleCloseWithoutSaving}>
-              Fechar sem salvar
-            </Button>
-            <Button onClick={handleCloseAndSave} disabled={isSaving}>
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Salvando..." : "Fechar e salvar"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UnsavedChangesModal
+        open={showCloseConfirm}
+        onClose={() => setShowCloseConfirm(false)}
+        onSaveAndClose={handleCloseAndSave}
+        onDiscard={handleCloseWithoutSaving}
+        isSaving={isSaving}
+      />
     </Dialog>
   );
 }

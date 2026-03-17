@@ -1,6 +1,7 @@
 import type { Client, Policy } from "@/types";
 import * as XLSX from "xlsx";
 import { formatDate } from "./date-helpers";
+import { parseNotesFromPolicy } from "./insurance-calculations";
 
 export function exportClientsToExcel(clients: Client[], policies: Policy[]) {
   const data = clients.map((client) => {
@@ -42,13 +43,18 @@ export function exportPoliciesToExcel(policies: Policy[], clients: Client[]) {
     const client = clients.find((c) => c.id === policy.clientId);
     const dueDate = typeof policy.dueDate === "string" ? new Date(policy.dueDate) : policy.dueDate;
     
-    // Extract IOF, Prêmio Líquido, Comissão from notes
+    // Extract IOF, Prêmio Líquido, Comissão from notes (parsed supports new and legacy formats)
     const notes = policy.notes || "";
+    const parsed = parseNotesFromPolicy(notes);
     const iofMatch = notes.match(/IOF:\s*R\$\s*([\d.,]+)/i);
     const netMatch = notes.match(/Prêmio\s+Líquido:\s*R\$\s*([\d.,]+)/i);
-    const comm10Match = notes.match(/Comissão\s+10%:\s*R\$\s*([\d.,]+)/i);
-    const comm15Match = notes.match(/Comissão\s+15%:\s*R\$\s*([\d.,]+)/i);
     const plateMatch = notes.match(/Placa:\s*(\w+)/i);
+
+    const commPct = parsed.commissionRate != null ? `${parsed.commissionRate}%` : "";
+    const commBRL =
+      parsed.commission != null && parsed.commission > 0
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(parsed.commission)
+        : "";
 
     return {
       Cliente: client?.name || "",
@@ -66,8 +72,8 @@ export function exportPoliciesToExcel(policies: Policy[], clients: Client[]) {
         : "",
       IOF: iofMatch ? `R$ ${iofMatch[1]}` : "",
       "Prêmio Líquido": netMatch ? `R$ ${netMatch[1]}` : "",
-      "Comissão 10%": comm10Match ? `R$ ${comm10Match[1]}` : "",
-      "Comissão 15%": comm15Match ? `R$ ${comm15Match[1]}` : "",
+      "Comissão %": commPct,
+      "Comissão R$": commBRL,
       Placa: plateMatch ? plateMatch[1] : "",
       Status: policy.status === "active" ? "Ativo" : "Inativo",
       Observações: notes.replace(/IOF:.*?\|/g, "").replace(/Prêmio Líquido:.*?\|/g, "").replace(/Comissão(\s+\d+%)?:.*?\|/g, "").replace(/Placa:.*?\|/g, "").replace(/\|/g, "").trim() || "",
