@@ -180,14 +180,17 @@ export function RenewalDetailModal({
   }, []);
 
   const handleClientChange = useCallback(
-    (field: "name" | "phone" | "email" | "birthday", value: string | undefined) => {
-      setEditedData((prev) => ({
-        ...prev,
-        client: {
-          ...(prev.client ?? renewal?.client ?? {}),
-          [field]: value,
-        },
-      }));
+    (field: "name" | "phone" | "email" | "birthday", value: string | Date | undefined) => {
+      setEditedData((prev) => {
+        const baseClient = prev.client ?? renewal?.client ?? {};
+        return {
+          ...prev,
+          client: {
+            ...baseClient,
+            [field]: value,
+          },
+        } as Partial<RenewalWithClient>;
+      });
     },
     [renewal]
   );
@@ -334,7 +337,7 @@ export function RenewalDetailModal({
                           : new Date(renewal.client.birthday).toISOString().split("T")[0]
                         : ""
                     }
-                    onChange={(e) => handleClientChange("birthday", e.target.value ? new Date(e.target.value) : undefined)}
+                    onChange={(e) => handleClientChange("birthday", e.target.value || undefined)}
                     className="font-semibold"
                   />
                 ) : (

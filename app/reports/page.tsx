@@ -351,9 +351,10 @@ export default function ReportsPage() {
                   <YAxis stroke="#a1a1aa" style={{ fontSize: "11px" }} tick={{ fill: "#a1a1aa" }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: "#09090b", border: "1px solid #27272a", borderRadius: "8px", padding: "12px" }}
-                    formatter={(value: number, name: string) => {
-                      if (name === "count") return [`${value} apólice(s)`, "Quantidade"];
-                      return [formatBRL(value), "Prêmio"];
+                    formatter={(value = 0, name = "") => {
+                      const num = Number(value) || 0;
+                      if (name === "count") return [`${num} apólice(s)`, "Quantidade"];
+                      return [formatBRL(num), "Prêmio"];
                     }}
                     labelFormatter={(label) => `Mês: ${label}`}
                   />
