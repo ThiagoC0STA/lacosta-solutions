@@ -31,6 +31,7 @@ interface ProcessedRow {
   netPremium?: number; // Prêmio Líquido
   commission?: number; // Comissão
   commissionRate?: number | null; // % e.g. 25 for 25%
+  policyNumber?: string; // Número da apólice (NOT CPF/CNPJ)
   cpfCnpj?: string;
   plate?: string;
   uniqueKey: string; // CPF/CNPJ + VENCIMENTO ou PLACA + VENCIMENTO
@@ -137,6 +138,20 @@ function detectColumnMapping(headers: string[]): Record<string, string> {
       mapping.premium = header;
     }
     
+    // Número da Apólice - must NOT match CPF/CNPJ columns
+    if (!mapping.policyNumber && (
+      (headerNormalized.includes("numero") && headerNormalized.includes("apolice")) ||
+      (headerNormalized.includes("numero") && headerNormalized.includes("apol")) ||
+      headerNormalized === "numeroapolice" ||
+      headerLower.includes("número da apólice") ||
+      headerLower.includes("nº apólice") ||
+      (headerNormalized.includes("apolice") && !headerNormalized.includes("cpf") && !headerNormalized.includes("cnpj"))
+    )) {
+      if (!headerNormalized.includes("cpf") && !headerNormalized.includes("cnpj")) {
+        mapping.policyNumber = header;
+      }
+    }
+    
     // CPF/CNPJ
     if (!mapping.cpfCnpj && (
       headerNormalized.includes("cpf") ||
@@ -150,7 +165,7 @@ function detectColumnMapping(headers: string[]): Record<string, string> {
     if (!mapping.plate && headerNormalized.includes("placa")) {
       mapping.plate = header;
     }
-    
+
     // IOF
     if (!mapping.iof && headerNormalized.includes("iof")) {
       mapping.iof = header;
@@ -666,6 +681,7 @@ export default function ImportPage() {
             
             const cpfCnpj = columnMapping.cpfCnpj ? String(row[columnMapping.cpfCnpj] || "").trim() : undefined;
             const plate = columnMapping.plate ? String(row[columnMapping.plate] || "").trim() : undefined;
+            const policyNumber = columnMapping.policyNumber ? String(row[columnMapping.policyNumber] || "").trim() : undefined;
 
             // Create unique key: CPF/CNPJ + VENCIMENTO or PLACA + VENCIMENTO
             const uniqueKey = cpfCnpj 
@@ -687,6 +703,7 @@ export default function ImportPage() {
               netPremium: isNaN(netPremium || 0) ? undefined : netPremium,
               commission: isNaN(commission || 0) ? undefined : commission,
               commissionRate,
+              policyNumber,
               cpfCnpj,
               plate,
               uniqueKey,
@@ -897,7 +914,7 @@ export default function ImportPage() {
 
               policiesToCreate.push({
                 clientId,
-                policyNumber: row.cpfCnpj || row.plate || undefined,
+                policyNumber: row.policyNumber || undefined,
                 insurer: row.insurer,
                 product: row.product,
                 dueDate: row.dueDate,

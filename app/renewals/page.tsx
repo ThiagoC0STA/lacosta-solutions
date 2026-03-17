@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
-import { useClients, usePolicies } from "@/hooks/use-supabase-data";
+import { useClients, usePolicies, useProducts } from "@/hooks/use-supabase-data";
 import {
   useReactTable,
   getCoreRowModel,
@@ -22,15 +22,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, Filter, RefreshCw, Download, Plus, CheckSquare, Square, Trash2, Info, Calendar, X, FileText, User, Building2, Package, DollarSign, Save, Phone, Mail } from "lucide-react";
 import { exportPoliciesToExcel } from "@/lib/export-helpers";
+import { getProductDisplay } from "@/lib/product-helpers";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { getStatusColor } from "@/lib/colors";
 import { calculateFromPremium, getCommissionFromNotes, parseNotesFromPolicy } from "@/lib/insurance-calculations";
-import { RenewalDetailModal } from "@/components/renewal-detail-modal";
+import { RenewalDetailModal, DUMMY_NEW_RENEWAL_ID } from "@/components/renewal-detail-modal";
 
 export default function RenewalsPage() {
-  const { clients, updateClient } = useClients();
+  const { clients, updateClient, createClient } = useClients();
   const { policies, updatePolicy, deletePolicy, createPolicy } = usePolicies();
+  const { products, createProduct } = useProducts();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "dueDate", desc: false },
   ]);
@@ -42,11 +44,19 @@ export default function RenewalsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
   const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
-  const [isSavingPolicy, setIsSavingPolicy] = useState(false);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
-  const [isCreatingPolicy, setIsCreatingPolicy] = useState(false);
-  const [newPolicy, setNewPolicy] = useState<Partial<RenewalWithClient>>({});
+
+  const dummyNewRenewal: RenewalWithClient = useMemo(
+    () => ({
+      id: DUMMY_NEW_RENEWAL_ID,
+      clientId: "",
+      client: { id: "", name: "" },
+      dueDate: new Date(),
+      status: "active",
+    }),
+    []
+  );
 
   const renewalsWithClients = useMemo<RenewalWithClient[]>(() => {
     const policiesList: any[] = Array.isArray(policies) ? policies : [];
@@ -88,6 +98,24 @@ export default function RenewalsPage() {
       }
     },
     [updateClient, selectedRenewal]
+  );
+
+  const handleCreatePolicy = useCallback(
+    async (data: Omit<RenewalWithClient, "id" | "client"> & { clientId: string }) => {
+      const created = await createPolicy({
+        clientId: data.clientId,
+        policyNumber: data.policyNumber,
+        insurer: data.insurer,
+        product: data.product,
+        dueDate: typeof data.dueDate === "string" ? new Date(data.dueDate) : data.dueDate,
+        premium: data.premium,
+        status: data.status ?? "active",
+        notes: data.notes,
+      });
+      const clientFromList = (Array.isArray(clients) ? clients : []).find((c: any) => c.id === data.clientId);
+      return { ...created, client: clientFromList || { id: data.clientId, name: "Cliente" } } as RenewalWithClient;
+    },
+    [createPolicy, clients]
   );
 
   const filteredData = useMemo(() => {
@@ -238,7 +266,7 @@ export default function RenewalsPage() {
         header: () => (
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            <span>Número da Apólice</span>
+            <span>CPF/CNPJ</span>
           </div>
         ),
         cell: ({ row }) => (
@@ -266,7 +294,7 @@ export default function RenewalsPage() {
           </div>
         ),
         cell: ({ row }) => (
-          <span className="text-foreground">{row.original.product || "-"}</span>
+          <span className="text-foreground">{getProductDisplay(row.original.product, products)}</span>
         ),
       },
       {
@@ -449,7 +477,7 @@ export default function RenewalsPage() {
         },
       },
     ],
-    [isSelectMode, selectedRows, filteredData, updatePolicy]
+    [isSelectMode, selectedRows, filteredData, updatePolicy, products]
   );
 
   const table = useReactTable({
@@ -491,8 +519,13 @@ export default function RenewalsPage() {
             <div className="flex gap-2 sm:gap-3">
               <Button
                 onClick={() => {
-                  setIsCreatingPolicy(true);
-                  setNewPolicy({});
+                  setSelectedRenewal({
+                    id: DUMMY_NEW_RENEWAL_ID,
+                    clientId: "",
+                    client: { id: "", name: "" },
+                    dueDate: new Date(),
+                    status: "active",
+                  } as RenewalWithClient);
                 }}
                 className="shadow-lg hover:shadow-xl flex-1 sm:flex-none"
               >
@@ -829,202 +862,14 @@ export default function RenewalsPage() {
           onUpdate={handleUpdateRenewal}
           onDelete={deletePolicy}
           onUpdateClient={handleUpdateClient}
+          onCreate={handleCreatePolicy}
+          clients={Array.isArray(clients) ? clients : []}
           allPolicies={Array.isArray(policies) ? policies : []}
           onSelectPolicy={handleSelectPolicy}
+          onCreateClient={(data) => createClient(data as any)}
+          products={Array.isArray(products) ? products : []}
+          onCreateProduct={(data) => createProduct(data)}
         />
-
-        {/* Create Policy Modal */}
-        <Dialog open={isCreatingPolicy} onOpenChange={(open) => {
-          if (!open) {
-            setIsCreatingPolicy(false);
-            setNewPolicy({});
-          }
-        }}>
-          <DialogHeader>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-primary" />
-                  </div>
-                  <DialogTitle className="text-2xl">Nova Apólice</DialogTitle>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsCreatingPolicy(false);
-                    setNewPolicy({});
-                  }}
-                  className="rounded-lg p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 shrink-0 z-20"
-                  aria-label="Fechar"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    if (!newPolicy.clientId) {
-                      alert("Selecione um cliente");
-                      return;
-                    }
-                    if (!newPolicy.dueDate) {
-                      alert("Data de vencimento é obrigatória");
-                      return;
-                    }
-                    setIsSavingPolicy(true);
-                    try {
-                      await createPolicy({
-                        clientId: newPolicy.clientId as string,
-                        policyNumber: newPolicy.policyNumber,
-                        insurer: newPolicy.insurer,
-                        product: newPolicy.product,
-                        dueDate: typeof newPolicy.dueDate === "string" ? new Date(newPolicy.dueDate) : newPolicy.dueDate,
-                        premium: newPolicy.premium,
-                        status: (newPolicy.status || "active") as "active" | "inactive",
-                        notes: newPolicy.notes,
-                      });
-                      setIsCreatingPolicy(false);
-                      setNewPolicy({});
-                    } catch (error) {
-                      alert(`Erro ao criar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
-                    } finally {
-                      setIsSavingPolicy(false);
-                    }
-                  }}
-                  disabled={isSavingPolicy}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {isSavingPolicy ? "Criando..." : "Criar"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setIsCreatingPolicy(false);
-                    setNewPolicy({});
-                  }}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </div>
-          </DialogHeader>
-          <DialogContent className="space-y-6">
-            {/* New Policy Form - No Card wrapper */}
-            <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <User className="h-3.5 w-3.5" />
-                      <span>Cliente *</span>
-                    </div>
-                    <Select
-                      value={newPolicy.clientId || ""}
-                      onChange={(e) => setNewPolicy({ ...newPolicy, clientId: e.target.value })}
-                      className="font-semibold w-full"
-                    >
-                      <option value="">Selecione um cliente</option>
-                      {(Array.isArray(clients) ? clients : [] as any[]).map((client: any) => (
-                        <option key={client.id} value={client.id}>
-                          {client.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                  <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <FileText className="h-3.5 w-3.5" />
-                      <span>Número da Apólice</span>
-                    </div>
-                    <Input
-                      value={newPolicy.policyNumber || ""}
-                      onChange={(e) => setNewPolicy({ ...newPolicy, policyNumber: e.target.value })}
-                      placeholder="Número da apólice"
-                      className="font-semibold"
-                    />
-                  </div>
-                  <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Building2 className="h-3.5 w-3.5" />
-                      <span>Seguradora</span>
-                    </div>
-                    <Input
-                      value={newPolicy.insurer || ""}
-                      onChange={(e) => setNewPolicy({ ...newPolicy, insurer: e.target.value })}
-                      placeholder="Seguradora"
-                      className="font-semibold"
-                    />
-                  </div>
-                  <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Package className="h-3.5 w-3.5" />
-                      <span>Produto</span>
-                    </div>
-                    <Input
-                      value={newPolicy.product || ""}
-                      onChange={(e) => setNewPolicy({ ...newPolicy, product: e.target.value })}
-                      placeholder="Produto"
-                      className="font-semibold"
-                    />
-                  </div>
-                  <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>Vencimento *</span>
-                    </div>
-                    <Input
-                      type="date"
-                      value={newPolicy.dueDate ? (typeof newPolicy.dueDate === "string" ? newPolicy.dueDate.split("T")[0] : new Date(newPolicy.dueDate).toISOString().split("T")[0]) : ""}
-                      onChange={(e) => setNewPolicy({ ...newPolicy, dueDate: e.target.value ? new Date(e.target.value) : undefined })}
-                      className="font-semibold"
-                    />
-                  </div>
-                  <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <DollarSign className="h-3.5 w-3.5" />
-                      <span>Prêmio</span>
-                    </div>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={newPolicy.premium || ""}
-                      onChange={(e) => setNewPolicy({ ...newPolicy, premium: e.target.value ? parseFloat(e.target.value) : undefined })}
-                      placeholder="0.00"
-                      className="font-semibold"
-                    />
-                  </div>
-                  <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <Info className="h-3.5 w-3.5" />
-                      <span>Status</span>
-                    </div>
-                    <Select
-                      value={newPolicy.status || "active"}
-                      onChange={(e) => setNewPolicy({ ...newPolicy, status: e.target.value as "active" | "inactive" })}
-                      className="font-semibold w-full"
-                    >
-                      <option value="active">Ativo</option>
-                      <option value="inactive">Inativo</option>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
-                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <FileText className="h-3.5 w-3.5" />
-                    <span>Observações</span>
-                  </div>
-                  <textarea
-                    value={newPolicy.notes || ""}
-                    onChange={(e) => setNewPolicy({ ...newPolicy, notes: e.target.value })}
-                    placeholder="Observações adicionais..."
-                    className="w-full min-h-[100px] rounded-lg border border-input/50 bg-background/50 backdrop-blur-sm px-3 py-2 text-sm font-semibold ring-offset-background placeholder:text-muted-foreground transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:border-ring focus-visible:bg-background"
-                  />
-                </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </AppLayout>
   );

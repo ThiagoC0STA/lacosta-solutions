@@ -12,6 +12,7 @@ import {
   Calendar,
   BarChart3,
   LogOut,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/renewals", label: "Renovações", icon: FileText },
   { href: "/clients", label: "Clientes", icon: Users },
+  { href: "/products", label: "Produtos", icon: Package },
   { href: "/calendar", label: "Calendário", icon: Calendar },
   { href: "/reports", label: "Relatórios", icon: BarChart3 },
   { href: "/import", label: "Importar", icon: Upload },

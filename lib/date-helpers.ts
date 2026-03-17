@@ -78,7 +78,9 @@ export function parseDate(dateStr: string): Date | null {
 
   // Try parsing with manual 2-digit year fix (Brazil: dd/MM/yy)
   // Handle formats like "26/01/26" or "01/01/26" or "06/06/79"
-  const twoDigitYearMatch = dateStr.match(/^(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{2})$/);
+  const twoDigitYearMatch = dateStr.match(
+    /^(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{2})$/,
+  );
   if (twoDigitYearMatch) {
     const [, day, month, year] = twoDigitYearMatch; // Brazil: day/month/year
     const twoDigitYear = parseInt(year, 10);
@@ -98,7 +100,9 @@ export function parseDate(dateStr: string): Date | null {
   }
 
   // Fallback: US format M/d/yy or MM/dd/yy (Excel often exports dates as M/d/yy when locale is US)
-  const usStyleMatch = dateStr.trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  const usStyleMatch = dateStr
+    .trim()
+    .match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
   if (usStyleMatch) {
     const [, first, second, yearPart] = usStyleMatch;
     const a = parseInt(first, 10);
@@ -207,7 +211,7 @@ export function parseExcelSerial(excelSerial: number): Date {
   return new Date(
     utcDate.getUTCFullYear(),
     utcDate.getUTCMonth(),
-    utcDate.getUTCDate()
+    utcDate.getUTCDate(),
   );
 }
 
@@ -274,11 +278,13 @@ export function isBirthdayToday(birthday: Date | string | undefined): boolean {
   const date = toLocalDate(birthday);
   const today = new Date();
   // Compare only month and day, ignore year
-  return date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
+  return (
+    date.getMonth() === today.getMonth() && date.getDate() === today.getDate()
+  );
 }
 
 export function isBirthdayThisMonth(
-  birthday: Date | string | undefined
+  birthday: Date | string | undefined,
 ): boolean {
   if (!birthday) return false;
   const date = toLocalDate(birthday);
@@ -300,7 +306,11 @@ export function getMonthBucket(date: Date): string {
   return format(date, "MMM/yyyy", { locale: ptBR });
 }
 
-export function pluralize(count: number, singular: string, plural?: string): string {
+export function pluralize(
+  count: number,
+  singular: string,
+  plural?: string,
+): string {
   if (count === 1) return `${count} ${singular}`;
   return `${count} ${plural || `${singular}s`}`;
 }

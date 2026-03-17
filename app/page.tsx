@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { useClients, usePolicies } from "@/hooks/use-supabase-data";
+import { useClients, usePolicies, useProducts } from "@/hooks/use-supabase-data";
 import {
   computeDashboardStats,
   getTopRenewals,
@@ -20,6 +20,7 @@ import { Calendar, AlertTriangle, Users, FileText, TrendingUp, Clock, Sparkles, 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getStatusFromTitle, getStatusColor } from "@/lib/colors";
+import { getProductDisplay } from "@/lib/product-helpers";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { RenewalDetailModal } from "@/components/renewal-detail-modal";
@@ -30,6 +31,7 @@ import { BirthdayDetailModal } from "@/components/birthday-detail-modal";
 export default function DashboardPage() {
   const { clients, updateClient } = useClients();
   const { policies, updatePolicy, deletePolicy } = usePolicies();
+  const { products, createProduct } = useProducts();
   const [showUrgentActions, setShowUrgentActions] = useState(false);
   const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
   const [filteredRenewalsModal, setFilteredRenewalsModal] = useState<{ open: boolean; filter: string | null }>({ open: false, filter: null });
@@ -397,7 +399,7 @@ export default function DashboardPage() {
                               {renewal.client.name}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                              {renewal.product || "Sem produto"} • {renewal.insurer || "Sem seguradora"}
+                              {getProductDisplay(renewal.product, products) || "Sem produto"} • {renewal.insurer || "Sem seguradora"}
                             </p>
                           </div>
                         </div>
@@ -584,7 +586,7 @@ export default function DashboardPage() {
                                 </div>
                                 {action.product && (
                                   <p className="text-xs sm:text-sm text-muted-foreground">
-                                    {action.product}
+                                    {getProductDisplay(action.product, products)}
                                   </p>
                                 )}
                               </div>
@@ -702,6 +704,7 @@ export default function DashboardPage() {
           onClose={() => setSelectedBirthdayClient(null)}
           client={selectedBirthdayClient}
           policies={Array.isArray(policies) ? policies : []}
+          products={Array.isArray(products) ? products : []}
         />
 
         {/* Renewal Detail Modal */}
@@ -713,6 +716,8 @@ export default function DashboardPage() {
           onDelete={deletePolicy}
           allPolicies={Array.isArray(policies) ? policies : []}
           onSelectPolicy={handleSelectPolicy}
+          products={Array.isArray(products) ? products : []}
+          onCreateProduct={(data) => createProduct(data)}
         />
       </motion.div>
     </AppLayout>

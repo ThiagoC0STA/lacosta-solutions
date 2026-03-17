@@ -1,4 +1,4 @@
-import type { Client, Policy } from "@/types";
+import type { Client, Policy, Product } from "@/types";
 import * as XLSX from "xlsx";
 import { formatDate } from "./date-helpers";
 import { parseNotesFromPolicy } from "./insurance-calculations";
@@ -14,13 +14,17 @@ export function exportClientsToExcel(clients: Client[], policies: Policy[]) {
       "Total de Apólices": clientPolicies.length,
       "Próxima Renovação": clientPolicies
         .filter((p) => p.status === "active")
-        .map((p) => typeof p.dueDate === "string" ? new Date(p.dueDate) : p.dueDate)
+        .map((p) =>
+          typeof p.dueDate === "string" ? new Date(p.dueDate) : p.dueDate,
+        )
         .sort((a, b) => a.getTime() - b.getTime())[0]
         ? formatDate(
             clientPolicies
               .filter((p) => p.status === "active")
-              .map((p) => typeof p.dueDate === "string" ? new Date(p.dueDate) : p.dueDate)
-              .sort((a, b) => a.getTime() - b.getTime())[0]
+              .map((p) =>
+                typeof p.dueDate === "string" ? new Date(p.dueDate) : p.dueDate,
+              )
+              .sort((a, b) => a.getTime() - b.getTime())[0],
           )
         : "",
     };
@@ -31,7 +35,10 @@ export function exportClientsToExcel(clients: Client[], policies: Policy[]) {
   XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes");
 
   // Auto-size columns
-  const maxWidth = data.reduce((w, r) => Math.max(w, Object.keys(r).length), 10);
+  const maxWidth = data.reduce(
+    (w, r) => Math.max(w, Object.keys(r).length),
+    10,
+  );
   worksheet["!cols"] = Array.from({ length: maxWidth }, () => ({ wch: 20 }));
 
   const fileName = `clientes_${new Date().toISOString().split("T")[0]}.xlsx`;
@@ -41,8 +48,11 @@ export function exportClientsToExcel(clients: Client[], policies: Policy[]) {
 export function exportPoliciesToExcel(policies: Policy[], clients: Client[]) {
   const data = policies.map((policy) => {
     const client = clients.find((c) => c.id === policy.clientId);
-    const dueDate = typeof policy.dueDate === "string" ? new Date(policy.dueDate) : policy.dueDate;
-    
+    const dueDate =
+      typeof policy.dueDate === "string"
+        ? new Date(policy.dueDate)
+        : policy.dueDate;
+
     // Extract IOF, Prêmio Líquido, Comissão from notes (parsed supports new and legacy formats)
     const notes = policy.notes || "";
     const parsed = parseNotesFromPolicy(notes);
@@ -50,17 +60,21 @@ export function exportPoliciesToExcel(policies: Policy[], clients: Client[]) {
     const netMatch = notes.match(/Prêmio\s+Líquido:\s*R\$\s*([\d.,]+)/i);
     const plateMatch = notes.match(/Placa:\s*(\w+)/i);
 
-    const commPct = parsed.commissionRate != null ? `${parsed.commissionRate}%` : "";
+    const commPct =
+      parsed.commissionRate != null ? `${parsed.commissionRate}%` : "";
     const commBRL =
       parsed.commission != null && parsed.commission > 0
-        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(parsed.commission)
+        ? new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(parsed.commission)
         : "";
 
     return {
       Cliente: client?.name || "",
       Telefone: client?.phone || "",
       Email: client?.email || "",
-      "Número da Apólice": policy.policyNumber || "",
+      "CPF/CNPJ": policy.policyNumber || "",
       Seguradora: policy.insurer || "",
       Produto: policy.product || "",
       "Data de Vencimento": formatDate(dueDate),
@@ -76,7 +90,14 @@ export function exportPoliciesToExcel(policies: Policy[], clients: Client[]) {
       "Comissão R$": commBRL,
       Placa: plateMatch ? plateMatch[1] : "",
       Status: policy.status === "active" ? "Ativo" : "Inativo",
-      Observações: notes.replace(/IOF:.*?\|/g, "").replace(/Prêmio Líquido:.*?\|/g, "").replace(/Comissão(\s+\d+%)?:.*?\|/g, "").replace(/Placa:.*?\|/g, "").replace(/\|/g, "").trim() || "",
+      Observações:
+        notes
+          .replace(/IOF:.*?\|/g, "")
+          .replace(/Prêmio Líquido:.*?\|/g, "")
+          .replace(/Comissão(\s+\d+%)?:.*?\|/g, "")
+          .replace(/Placa:.*?\|/g, "")
+          .replace(/\|/g, "")
+          .trim() || "",
     };
   });
 
@@ -85,7 +106,10 @@ export function exportPoliciesToExcel(policies: Policy[], clients: Client[]) {
   XLSX.utils.book_append_sheet(workbook, worksheet, "Renovações");
 
   // Auto-size columns
-  const maxWidth = data.reduce((w, r) => Math.max(w, Object.keys(r).length), 10);
+  const maxWidth = data.reduce(
+    (w, r) => Math.max(w, Object.keys(r).length),
+    10,
+  );
   worksheet["!cols"] = Array.from({ length: maxWidth }, () => ({ wch: 20 }));
 
   const fileName = `renovacoes_${new Date().toISOString().split("T")[0]}.xlsx`;
@@ -102,7 +126,7 @@ export function exportDashboardToExcel(
     dueIn16to30: number;
     birthdaysThisMonth: number;
     birthdaysToday: number;
-  }
+  },
 ) {
   const workbook = XLSX.utils.book_new();
 
@@ -131,10 +155,13 @@ export function exportDashboardToExcel(
   // Policies sheet
   const policiesData = policies.map((policy) => {
     const client = clients.find((c) => c.id === policy.clientId);
-    const dueDate = typeof policy.dueDate === "string" ? new Date(policy.dueDate) : policy.dueDate;
+    const dueDate =
+      typeof policy.dueDate === "string"
+        ? new Date(policy.dueDate)
+        : policy.dueDate;
     return {
       Cliente: client?.name || "",
-      "Número da Apólice": policy.policyNumber || "",
+      "CPF/CNPJ": policy.policyNumber || "",
       Seguradora: policy.insurer || "",
       Produto: policy.product || "",
       "Data de Vencimento": formatDate(dueDate),
@@ -146,5 +173,22 @@ export function exportDashboardToExcel(
   XLSX.utils.book_append_sheet(workbook, policiesSheet, "Apólices");
 
   const fileName = `dashboard_${new Date().toISOString().split("T")[0]}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+}
+
+export function exportProductsToExcel(
+  products: Product[],
+  policyCountByCode: Record<number, number>,
+) {
+  const data = products.map((p) => ({
+    Código: p.code,
+    Nome: p.name,
+    "Apólices vinculadas": policyCountByCode[p.code] ?? 0,
+  }));
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Produtos");
+  worksheet["!cols"] = [{ wch: 10 }, { wch: 25 }, { wch: 18 }];
+  const fileName = `produtos_${new Date().toISOString().split("T")[0]}.xlsx`;
   XLSX.writeFile(workbook, fileName);
 }

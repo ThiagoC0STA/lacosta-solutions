@@ -5,12 +5,16 @@ import {
   createClientsBatch,
   createPoliciesBatch,
   createPolicy,
+  createProduct,
   deleteClient,
   deletePolicy,
+  deleteProduct,
   getClients,
   getPolicies,
+  getProducts,
   updateClient,
   updatePolicy,
+  updateProduct,
 } from "@/lib/supabase/queries";
 import {
   deleteBackup,
@@ -18,7 +22,7 @@ import {
   restoreFromBackup,
   type Backup,
 } from "@/lib/supabase/backup-queries";
-import type { Client, Policy } from "@/types";
+import type { Client, Policy, Product } from "@/types";
 import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 
 // ============================================
@@ -157,6 +161,56 @@ export function usePolicies() {
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
     isCreatingBatch: createBatchMutation.isPending,
+  };
+}
+
+// ============================================
+// PRODUCTS
+// ============================================
+
+export function useProducts() {
+  const queryClient = useQueryClient();
+
+  const {
+    data: products = [] as Product[],
+    isLoading,
+    error,
+  } = useQuery<Product[]>({
+    queryKey: ["products"],
+    queryFn: () => getProducts(),
+  }) as UseQueryResult<Product[], Error>;
+
+  const createMutation = useMutation<Product, Error, Omit<Product, "id">>({
+    mutationFn: createProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
+  const updateMutation = useMutation<Product, Error, { id: string; data: Partial<Omit<Product, "id">> }>({
+    mutationFn: ({ id, data }) => updateProduct(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
+  const deleteMutation = useMutation<void, Error, string>({
+    mutationFn: deleteProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
+  return {
+    products,
+    isLoading,
+    error,
+    createProduct: createMutation.mutateAsync,
+    updateProduct: updateMutation.mutateAsync,
+    deleteProduct: deleteMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
   };
 }
 

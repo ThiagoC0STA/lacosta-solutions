@@ -6,14 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Gift, Sparkles, X, Phone, Mail, Calendar, MessageCircle, FileText, Building2, Package, DollarSign, Info } from "lucide-react";
 import { formatDate, isBirthdayToday } from "@/lib/date-helpers";
 import { cn } from "@/lib/utils";
-import type { Client } from "@/types";
-import type { Policy } from "@/types";
+import type { Client, Policy, Product } from "@/types";
+import { getProductDisplay } from "@/lib/product-helpers";
 
 interface BirthdayDetailModalProps {
   open: boolean;
   onClose: () => void;
   client: Client | null;
   policies?: Policy[];
+  products?: Product[];
 }
 
 export function BirthdayDetailModal({
@@ -21,6 +22,7 @@ export function BirthdayDetailModal({
   onClose,
   client,
   policies = [],
+  products = [],
 }: BirthdayDetailModalProps) {
   if (!client) return null;
 
@@ -225,7 +227,7 @@ export function BirthdayDetailModal({
                             <Package className="h-3 w-3" />
                             <span>Produto</span>
                           </div>
-                          <p className="text-sm font-semibold">{policy.product}</p>
+                          <p className="text-sm font-semibold">{getProductDisplay(policy.product, products)}</p>
                         </div>
                       )}
                       <div className="space-y-2">

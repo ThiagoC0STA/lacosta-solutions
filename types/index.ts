@@ -33,3 +33,14 @@ export interface RenewalWithClient extends Policy {
   client: Client;
 }
 
+export interface Product {
+  id: string;
+  code: number;
+  name: string;
+}
+
+/** Returns "code - name" format for display */
+export function productDisplay(p: Product): string {
+  return `${p.code} - ${p.name}`;
+}
+

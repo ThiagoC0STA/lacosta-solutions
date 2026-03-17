@@ -5,7 +5,8 @@ import { FileText, X } from "lucide-react";
 import { formatDate, classifyDueStatus } from "@/lib/date-helpers";
 import { getStatusColor } from "@/lib/colors";
 import { cn } from "@/lib/utils";
-import type { RenewalWithClient } from "@/types";
+import type { Product, RenewalWithClient } from "@/types";
+import { getProductDisplay } from "@/lib/product-helpers";
 
 interface FilteredRenewalsModalProps {
   open: boolean;
@@ -13,6 +14,7 @@ interface FilteredRenewalsModalProps {
   filter: string | null;
   renewals: RenewalWithClient[];
   onRenewalClick: (renewal: RenewalWithClient) => void;
+  products?: Product[];
 }
 
 export function FilteredRenewalsModal({
@@ -21,6 +23,7 @@ export function FilteredRenewalsModal({
   filter,
   renewals,
   onRenewalClick,
+  products = [],
 }: FilteredRenewalsModalProps) {
   const getTitle = () => {
     switch (filter) {
@@ -116,7 +119,7 @@ export function FilteredRenewalsModal({
                         )}
                         {renewal.product && (
                           <span className="text-xs text-muted-foreground">
-                            {renewal.product}
+                            {getProductDisplay(renewal.product, products)}
                           </span>
                         )}
                       </div>

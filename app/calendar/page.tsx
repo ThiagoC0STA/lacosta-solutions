@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useClients, usePolicies } from "@/hooks/use-supabase-data";
+import { useClients, usePolicies, useProducts } from "@/hooks/use-supabase-data";
 import { formatDate, classifyDueStatus, isBirthdayToday, toLocalDate } from "@/lib/date-helpers";
 import { getStatusColor } from "@/lib/colors";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Gift, Sparkles } from "lucide-react";
@@ -17,6 +17,7 @@ import { DayEventsModal } from "@/components/day-events-modal";
 export default function CalendarPage() {
   const { clients, updateClient } = useClients();
   const { policies, updatePolicy, deletePolicy } = usePolicies();
+  const { products, createProduct } = useProducts();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -486,6 +487,8 @@ export default function CalendarPage() {
           onDelete={deletePolicy}
           allPolicies={policies}
           onSelectPolicy={handleSelectPolicy}
+          products={Array.isArray(products) ? products : []}
+          onCreateProduct={(data) => createProduct(data)}
         />      
         </div>
     </AppLayout>

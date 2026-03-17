@@ -1,6 +1,60 @@
-import type { Client, Policy } from "@/types";
+import type { Client, Policy, Product } from "@/types";
 import { formatDateForStorage } from "@/lib/date-helpers";
 import { supabase } from "./client";
+
+// ============================================
+// PRODUCTS
+// ============================================
+
+export async function getProducts(): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("code", { ascending: true });
+
+  if (error) throw error;
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    code: row.code,
+    name: row.name,
+  }));
+}
+
+export async function createProduct(product: Omit<Product, "id">): Promise<Product> {
+  const { data, error } = await supabase
+    .from("products")
+    .insert({ code: product.code, name: product.name })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { id: data.id, code: data.code, name: data.name };
+}
+
+export async function updateProduct(id: string, product: Partial<Omit<Product, "id">>): Promise<Product> {
+  const updateData: any = {};
+  if (product.code !== undefined) updateData.code = product.code;
+  if (product.name !== undefined) updateData.name = product.name;
+
+  const { data, error } = await supabase
+    .from("products")
+    .update(updateData)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { id: data.id, code: data.code, name: data.name };
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export function formatProductLabel(product: Product): string {
+  return `${product.code} - ${product.name}`;
+}
 
 // ============================================
 // CLIENTS

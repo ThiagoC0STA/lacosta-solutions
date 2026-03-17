@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
-import { useClients, usePolicies } from "@/hooks/use-supabase-data";
+import { useClients, usePolicies, useProducts } from "@/hooks/use-supabase-data";
 import {
   useReactTable,
   getCoreRowModel,
@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpDown, ArrowUp, ArrowDown, MessageCircle, X, User, Phone, Mail, Calendar, FileText, Building2, Package, DollarSign, Info, Search, Filter, Users as UsersIcon, Gift, Sparkles, Edit2, Save, Trash2, Plus, Download } from "lucide-react";
 import { exportClientsToExcel } from "@/lib/export-helpers";
+import { formatPhoneBR } from "@/lib/masks";
+import { getProductDisplay } from "@/lib/product-helpers";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -30,6 +32,7 @@ import { BirthdayDetailModal } from "@/components/birthday-detail-modal";
 function ClientsPageContent() {
   const { clients, updateClient, deleteClient, createClient } = useClients();
   const { policies } = usePolicies();
+  const { products } = useProducts();
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "name", desc: false },
@@ -672,9 +675,9 @@ function ClientsPageContent() {
                       </div>
                       {isEditing || isCreating ? (
                         <Input
-                          value={editedClient.phone || ""}
-                          onChange={(e) => setEditedClient({ ...editedClient, phone: e.target.value })}
-                          placeholder="Telefone"
+                          value={formatPhoneBR(editedClient.phone ?? "")}
+                          onChange={(e) => setEditedClient({ ...editedClient, phone: formatPhoneBR(e.target.value) })}
+                          placeholder="(00) 00000-0000"
                           className="font-semibold"
                         />
                       ) : (
@@ -810,9 +813,9 @@ function ClientsPageContent() {
                         <span>Telefone</span>
                       </div>
                       <Input
-                        value={editedClient.phone || ""}
-                        onChange={(e) => setEditedClient({ ...editedClient, phone: e.target.value })}
-                        placeholder="Telefone"
+                        value={formatPhoneBR(editedClient.phone ?? "")}
+                        onChange={(e) => setEditedClient({ ...editedClient, phone: formatPhoneBR(e.target.value) })}
+                        placeholder="(00) 00000-0000"
                         className="font-semibold"
                       />
                     </div>
@@ -910,7 +913,7 @@ function ClientsPageContent() {
                                       <Package className="h-3 w-3" />
                                       <span>Produto</span>
                                     </div>
-                                    <p className="text-sm font-semibold">{policy.product}</p>
+                                    <p className="text-sm font-semibold">{getProductDisplay(policy.product, products)}</p>
                                   </div>
                                 )}
                                 <div className="space-y-2">
@@ -972,6 +975,7 @@ function ClientsPageContent() {
           onClose={() => setSelectedBirthdayClient(null)}
           client={selectedBirthdayClient}
           policies={Array.isArray(policies) ? policies : []}
+          products={Array.isArray(products) ? products : []}
         />
       </div>
     </AppLayout>
