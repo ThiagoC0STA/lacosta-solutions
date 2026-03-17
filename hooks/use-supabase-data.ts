@@ -12,6 +12,12 @@ import {
   updateClient,
   updatePolicy,
 } from "@/lib/supabase/queries";
+import {
+  deleteBackup,
+  getBackups,
+  restoreFromBackup,
+  type Backup,
+} from "@/lib/supabase/backup-queries";
 import type { Client, Policy } from "@/types";
 import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 
@@ -151,5 +157,47 @@ export function usePolicies() {
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
     isCreatingBatch: createBatchMutation.isPending,
+  };
+}
+
+// ============================================
+// BACKUPS
+// ============================================
+
+export function useBackups() {
+  const queryClient = useQueryClient();
+
+  const {
+    data: backups = [],
+    isLoading,
+    error,
+  } = useQuery<Backup[]>({
+    queryKey: ["backups"],
+    queryFn: () => getBackups(),
+  }) as UseQueryResult<Backup[], Error>;
+
+  const restoreMutation = useMutation<void, Error, string>({
+    mutationFn: restoreFromBackup,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["policies"] });
+    },
+  });
+
+  const deleteMutation = useMutation<void, Error, string>({
+    mutationFn: deleteBackup,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["backups"] });
+    },
+  });
+
+  return {
+    backups,
+    isLoading,
+    error,
+    restoreBackup: restoreMutation.mutateAsync,
+    deleteBackup: deleteMutation.mutateAsync,
+    isRestoring: restoreMutation.isPending,
+    isDeleting: deleteMutation.isPending,
   };
 }

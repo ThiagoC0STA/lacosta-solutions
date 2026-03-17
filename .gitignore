@@ -1,7 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
+**/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -13,12 +14,17 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
+# next.js (root and subdirs like pulse/)
+.next/
+**/.next/
+out/
+**/out/
 
 # production
 /build
+
+# Subproject (if you don't want to track pulse at all, uncomment below)
+# pulse/
 
 # misc
 .DS_Store
