@@ -3,16 +3,20 @@
 import {
   createClient,
   createClientsBatch,
+  createInsurer,
   createPoliciesBatch,
   createPolicy,
   createProduct,
   deleteClient,
+  deleteInsurer,
   deletePolicy,
   deleteProduct,
   getClients,
+  getInsurers,
   getPolicies,
   getProducts,
   updateClient,
+  updateInsurer,
   updatePolicy,
   updateProduct,
 } from "@/lib/supabase/queries";
@@ -22,7 +26,7 @@ import {
   restoreFromBackup,
   type Backup,
 } from "@/lib/supabase/backup-queries";
-import type { Client, Policy, Product } from "@/types";
+import type { Client, Policy, Product, Insurer } from "@/types";
 import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 
 // ============================================
@@ -208,6 +212,56 @@ export function useProducts() {
     createProduct: createMutation.mutateAsync,
     updateProduct: updateMutation.mutateAsync,
     deleteProduct: deleteMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+  };
+}
+
+// ============================================
+// INSURERS
+// ============================================
+
+export function useInsurers() {
+  const queryClient = useQueryClient();
+
+  const {
+    data: insurers = [] as Insurer[],
+    isLoading,
+    error,
+  } = useQuery<Insurer[]>({
+    queryKey: ["insurers"],
+    queryFn: () => getInsurers(),
+  }) as UseQueryResult<Insurer[], Error>;
+
+  const createMutation = useMutation<Insurer, Error, Omit<Insurer, "id">>({
+    mutationFn: createInsurer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["insurers"] });
+    },
+  });
+
+  const updateMutation = useMutation<Insurer, Error, { id: string; data: Partial<Omit<Insurer, "id">> }>({
+    mutationFn: ({ id, data }) => updateInsurer(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["insurers"] });
+    },
+  });
+
+  const deleteMutation = useMutation<void, Error, string>({
+    mutationFn: deleteInsurer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["insurers"] });
+    },
+  });
+
+  return {
+    insurers,
+    isLoading,
+    error,
+    createInsurer: createMutation.mutateAsync,
+    updateInsurer: updateMutation.mutateAsync,
+    deleteInsurer: deleteMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,

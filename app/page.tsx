@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { useClients, usePolicies, useProducts } from "@/hooks/use-supabase-data";
+import { useClients, usePolicies, useProducts, useInsurers } from "@/hooks/use-supabase-data";
 import {
   computeDashboardStats,
   getTopRenewals,
@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const { clients, updateClient } = useClients();
   const { policies, updatePolicy, deletePolicy } = usePolicies();
   const { products, createProduct } = useProducts();
+  const { insurers, createInsurer } = useInsurers();
   const [showUrgentActions, setShowUrgentActions] = useState(false);
   const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
   const [filteredRenewalsModal, setFilteredRenewalsModal] = useState<{ open: boolean; filter: string | null }>({ open: false, filter: null });
@@ -718,6 +719,8 @@ export default function DashboardPage() {
           onSelectPolicy={handleSelectPolicy}
           products={Array.isArray(products) ? products : []}
           onCreateProduct={(data) => createProduct(data)}
+          insurers={Array.isArray(insurers) ? insurers : []}
+          onCreateInsurer={(data) => createInsurer(data)}
         />
       </motion.div>
     </AppLayout>

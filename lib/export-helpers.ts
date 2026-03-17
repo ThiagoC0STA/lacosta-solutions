@@ -1,4 +1,4 @@
-import type { Client, Policy, Product } from "@/types";
+import type { Client, Policy, Product, Insurer } from "@/types";
 import * as XLSX from "xlsx";
 import { formatDate } from "./date-helpers";
 import { parseNotesFromPolicy } from "./insurance-calculations";
@@ -190,5 +190,21 @@ export function exportProductsToExcel(
   XLSX.utils.book_append_sheet(workbook, worksheet, "Produtos");
   worksheet["!cols"] = [{ wch: 10 }, { wch: 25 }, { wch: 18 }];
   const fileName = `produtos_${new Date().toISOString().split("T")[0]}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+}
+
+export function exportInsurersToExcel(
+  insurers: Insurer[],
+  policyCountByName: Record<string, number>,
+) {
+  const data = insurers.map((i) => ({
+    Nome: i.name,
+    "Apólices vinculadas": policyCountByName[i.name] ?? 0,
+  }));
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Asseguradoras");
+  worksheet["!cols"] = [{ wch: 30 }, { wch: 18 }];
+  const fileName = `asseguradoras_${new Date().toISOString().split("T")[0]}.xlsx`;
   XLSX.writeFile(workbook, fileName);
 }

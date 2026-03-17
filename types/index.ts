@@ -44,3 +44,8 @@ export function productDisplay(p: Product): string {
   return `${p.code} - ${p.name}`;
 }
 
+export interface Insurer {
+  id: string;
+  name: string;
+}
+

@@ -72,38 +72,22 @@ export function ClientCreateModal({
           onClick={(e) => e.stopPropagation()}
         >
           <DialogHeader>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 pr-2">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                  </div>
-                  <DialogTitle className="text-lg sm:text-xl lg:text-2xl truncate">
-                    Novo Cliente
-                  </DialogTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 pr-2">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
-                <button
-                  onClick={handleClose}
-                  className="rounded-lg p-1.5 sm:p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted shrink-0"
-                  aria-label="Fechar"
-                >
-                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
+                <DialogTitle className="text-lg sm:text-xl lg:text-2xl truncate">
+                  Novo Cliente
+                </DialogTitle>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCreate}
-                  disabled={isSaving}
-                >
-                  <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
-                  {isSaving ? "Criando..." : "Criar"}
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleClose}>
-                  Cancelar
-                </Button>
-              </div>
+              <button
+                onClick={handleClose}
+                className="rounded-lg p-1.5 sm:p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted shrink-0"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
             </div>
           </DialogHeader>
           <DialogContent className="space-y-6">
@@ -171,6 +155,15 @@ export function ClientCreateModal({
               </CardContent>
             </Card>
           </DialogContent>
+          <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-border/50 bg-muted/5 flex items-center justify-end gap-2 flex-wrap shrink-0 mt-auto">
+            <Button variant="outline" size="sm" onClick={handleClose}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={handleCreate} disabled={isSaving}>
+              <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
+              {isSaving ? "Criando..." : "Criar"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

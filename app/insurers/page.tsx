@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
-import { useProducts, usePolicies } from "@/hooks/use-supabase-data";
+import { useInsurers, usePolicies } from "@/hooks/use-supabase-data";
 import {
   useReactTable,
   getCoreRowModel,
@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Package,
+  Building2,
   Plus,
   Search,
   Edit2,
@@ -32,81 +32,130 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
-import { productDisplay, type Product } from "@/types";
+import type { Insurer } from "@/types";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
-import { exportProductsToExcel } from "@/lib/export-helpers";
-import { extractProductCodeFromPolicy } from "@/lib/product-helpers";
+import { exportInsurersToExcel } from "@/lib/export-helpers";
+import { insurerMatchesPolicy } from "@/lib/insurer-helpers";
 
-type ProductWithStats = Product & { policyCount: number };
+type InsurerWithStats = Insurer & { policyCount: number };
 
-export default function ProductsPage() {
-  const { products, createProduct, updateProduct, deleteProduct, isLoading } = useProducts();
+export default function InsurersPage() {
+  const { insurers, createInsurer, updateInsurer, deleteInsurer, isLoading } = useInsurers();
   const { policies } = usePolicies();
   const [globalFilter, setGlobalFilter] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<(typeof products)[0] | null>(null);
+  const [selectedInsurer, setSelectedInsurer] = useState<Insurer | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [editedProduct, setEditedProduct] = useState<{ code: number; name: string }>({ code: 0, name: "" });
+  const [editedName, setEditedName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [sorting, setSorting] = useState<SortingState>([{ id: "code", desc: false }]);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 25,
   });
 
-  const policyCountByCode = useMemo(() => {
-    const map: Record<number, number> = {};
-    for (const policy of policies) {
-      const code = extractProductCodeFromPolicy(policy.product);
-      if (code != null) {
-        map[code] = (map[code] ?? 0) + 1;
+  const hasAutoExtractedRef = useRef(false);
+
+  // Auto-extract insurers from policies when table is empty but policies have insurer data
+  useEffect(() => {
+    if (isLoading || isExtracting || hasAutoExtractedRef.current) return;
+    if (insurers.length > 0) return;
+    const hasPoliciesWithInsurer = policies.some((p) => (p.insurer || "").trim());
+    if (!hasPoliciesWithInsurer) return;
+
+    hasAutoExtractedRef.current = true;
+    const run = async () => {
+      const seen = new Map<string, string>();
+      for (const p of policies) {
+        const raw = (p.insurer || "").trim();
+        if (!raw) continue;
+        const key = raw.toLowerCase();
+        if (!seen.has(key)) seen.set(key, raw);
       }
+      const toCreate = Array.from(seen.values());
+      if (toCreate.length === 0) return;
+
+      setIsExtracting(true);
+      try {
+        for (const name of toCreate) {
+          try {
+            await createInsurer({ name: name.trim() });
+          } catch {
+            // Skip duplicates
+          }
+        }
+      } finally {
+        setIsExtracting(false);
+      }
+    };
+    run();
+  }, [isLoading, isExtracting, insurers.length, policies, createInsurer]);
+
+  const policyCountByName = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const insurer of insurers) {
+      const count = policies.filter((p) =>
+        insurerMatchesPolicy(insurer.name, p.insurer)
+      ).length;
+      map[insurer.name] = count;
     }
     return map;
-  }, [policies]);
+  }, [insurers, policies]);
 
-  const productsWithStats: ProductWithStats[] = useMemo(
+  const insurersWithStats: InsurerWithStats[] = useMemo(
     () =>
-      products.map((p) => ({
-        ...p,
-        policyCount: policyCountByCode[p.code] ?? 0,
+      insurers.map((i) => ({
+        ...i,
+        policyCount: policyCountByName[i.name] ?? 0,
       })),
-    [products, policyCountByCode]
+    [insurers, policyCountByName]
   );
 
   const totalPoliciesLinked = useMemo(
-    () => Object.values(policyCountByCode).reduce((a, b) => a + b, 0),
-    [policyCountByCode]
+    () => Object.values(policyCountByName).reduce((a, b) => a + b, 0),
+    [policyCountByName]
   );
 
-  const nextCode = products.length > 0 ? Math.max(...products.map((p) => p.code)) + 1 : 0;
+  const handleExtractFromPolicies = async () => {
+    const seen = new Map<string, string>();
+    for (const p of policies) {
+      const raw = (p.insurer || "").trim();
+      if (!raw) continue;
+      const key = raw.toLowerCase();
+      if (!seen.has(key)) seen.set(key, raw);
+    }
+    const toCreate = Array.from(seen.values()).filter(
+      (name) =>
+        !insurers.some((i) => insurerMatchesPolicy(i.name, name))
+    );
+    if (toCreate.length === 0) {
+      alert("Todas as asseguradoras das apólices já estão cadastradas.");
+      return;
+    }
+    setIsExtracting(true);
+    try {
+      let created = 0;
+      for (const name of toCreate) {
+        try {
+          await createInsurer({ name: name.trim() });
+          created++;
+        } catch {
+          // Skip duplicates (e.g. case variation)
+        }
+      }
+      alert(`${created} asseguradora(s) extraída(s) das apólices.`);
+    } catch (error) {
+      alert(`Erro ao extrair: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
+    } finally {
+      setIsExtracting(false);
+    }
+  };
 
-  const columns: ColumnDef<ProductWithStats>[] = useMemo(
+  const columns: ColumnDef<InsurerWithStats>[] = useMemo(
     () => [
-      {
-        accessorKey: "code",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-8 p-0"
-          >
-            Código
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="ml-2 h-4 w-4" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="ml-2 h-4 w-4" />
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            )}
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.code}</span>
-        ),
-      },
       {
         accessorKey: "name",
         header: ({ column }) => (
@@ -125,7 +174,9 @@ export default function ProductsPage() {
             )}
           </Button>
         ),
-        cell: ({ row }) => row.original.name,
+        cell: ({ row }) => (
+          <span className="font-medium">{row.original.name}</span>
+        ),
       },
       {
         accessorKey: "policyCount",
@@ -157,7 +208,12 @@ export default function ProductsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleEdit(row.original)}
+              onClick={() => {
+                setSelectedInsurer(row.original);
+                setIsEditing(true);
+                setEditedName(row.original.name);
+                setIsCreating(false);
+              }}
             >
               <Edit2 className="h-4 w-4 mr-1" />
               Editar
@@ -165,7 +221,18 @@ export default function ProductsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleDelete(row.original)}
+              onClick={async () => {
+                if (!confirm(`Deletar a asseguradora "${row.original.name}"?`)) return;
+                try {
+                  await deleteInsurer(row.original.id);
+                  if (selectedInsurer?.id === row.original.id) {
+                    setSelectedInsurer(null);
+                    setIsEditing(false);
+                  }
+                } catch (error) {
+                  alert(`Erro ao deletar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
+                }
+              }}
               className="text-destructive hover:text-destructive"
             >
               <Trash2 className="h-4 w-4 mr-1" />
@@ -175,11 +242,11 @@ export default function ProductsPage() {
         ),
       },
     ],
-    []
+    [selectedInsurer, deleteInsurer]
   );
 
   const table = useReactTable({
-    data: productsWithStats,
+    data: insurersWithStats,
     columns,
     state: {
       sorting,
@@ -196,33 +263,29 @@ export default function ProductsPage() {
     globalFilterFn: (row, _columnId, filterValue) => {
       const q = String(filterValue || "").toLowerCase();
       if (!q) return true;
-      const p = row.original;
-      return (
-        String(p.code).includes(q) ||
-        p.name.toLowerCase().includes(q)
-      );
+      return row.original.name.toLowerCase().includes(q);
     },
   });
 
   const handleSave = async () => {
-    if (!editedProduct.name?.trim()) {
+    if (!editedName?.trim()) {
       alert("Nome é obrigatório");
       return;
     }
     setIsSaving(true);
     try {
-      if (selectedProduct) {
-        await updateProduct({
-          id: selectedProduct.id,
-          data: editedProduct,
+      if (selectedInsurer) {
+        await updateInsurer({
+          id: selectedInsurer.id,
+          data: { name: editedName.trim() },
         });
         setIsEditing(false);
-        setSelectedProduct(null);
+        setSelectedInsurer(null);
       } else if (isCreating) {
-        await createProduct(editedProduct);
+        await createInsurer({ name: editedName.trim() });
         setIsCreating(false);
       }
-      setEditedProduct({ code: nextCode, name: "" });
+      setEditedName("");
     } catch (error) {
       alert(`Erro ao salvar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
     } finally {
@@ -230,45 +293,22 @@ export default function ProductsPage() {
     }
   };
 
-  const handleDelete = async (product: (typeof products)[0]) => {
-    if (!confirm(`Tem certeza que deseja deletar o produto "${productDisplay(product)}"?`)) return;
-    setIsDeleting(true);
-    try {
-      await deleteProduct(product.id);
-      if (selectedProduct?.id === product.id) {
-        setSelectedProduct(null);
-        setIsEditing(false);
-      }
-    } catch (error) {
-      alert(`Erro ao deletar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleEdit = (product: ProductWithStats) => {
-    setSelectedProduct(product);
-    setIsEditing(true);
-    setEditedProduct({ code: product.code, name: product.name });
-    setIsCreating(false);
-  };
-
   const handleCreateNew = () => {
-    setSelectedProduct(null);
+    setSelectedInsurer(null);
     setIsCreating(true);
     setIsEditing(true);
-    setEditedProduct({ code: nextCode, name: "" });
+    setEditedName("");
   };
 
   const handleCancel = () => {
-    setSelectedProduct(null);
+    setSelectedInsurer(null);
     setIsCreating(false);
     setIsEditing(false);
-    setEditedProduct({ code: 0, name: "" });
+    setEditedName("");
   };
 
   const handleExport = () => {
-    exportProductsToExcel(products, policyCountByCode);
+    exportInsurersToExcel(insurers, policyCountByName);
   };
 
   const filteredCount = table.getFilteredRowModel().rows.length;
@@ -280,32 +320,37 @@ export default function ProductsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
-                <Package className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+                <Building2 className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
-                  Produtos
+                  Asseguradoras
                 </h1>
                 <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mt-1">
-                  Gerencie os produtos de seguros
+                  Gerencie as seguradoras vinculadas às apólices
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={handleExtractFromPolicies}
+                disabled={isExtracting || policies.length === 0}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {isExtracting ? "Extraindo..." : "Extrair das apólices"}
+              </Button>
               <Button
                 variant="outline"
                 onClick={handleExport}
-                disabled={products.length === 0}
+                disabled={insurers.length === 0}
               >
                 <Download className="h-4 w-4 mr-2" />
                 Exportar Excel
               </Button>
-              <Button
-                onClick={handleCreateNew}
-                className="shadow-lg hover:shadow-xl"
-              >
+              <Button onClick={handleCreateNew} className="shadow-lg hover:shadow-xl">
                 <Plus className="h-4 w-4 mr-2" />
-                Novo Produto
+                Nova Asseguradora
               </Button>
             </div>
           </div>
@@ -315,12 +360,12 @@ export default function ProductsPage() {
           <Card className="shadow-lg border-border">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                Total de Produtos
+                <Building2 className="h-4 w-4" />
+                Total de Asseguradoras
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{products.length}</p>
+              <p className="text-2xl font-bold">{insurers.length}</p>
             </CardContent>
           </Card>
           <Card className="shadow-lg border-border">
@@ -345,7 +390,7 @@ export default function ProductsPage() {
               <p className="text-2xl font-bold">{filteredCount}</p>
               {globalFilter && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  filtrado de {products.length} produtos
+                  filtrado de {insurers.length} asseguradoras
                 </p>
               )}
             </CardContent>
@@ -362,7 +407,7 @@ export default function ProductsPage() {
                 <CardTitle className="text-lg sm:text-xl">Buscar</CardTitle>
               </div>
               <Input
-                placeholder="Buscar por código ou nome..."
+                placeholder="Buscar por nome..."
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 className="max-w-md"
@@ -405,10 +450,10 @@ export default function ProductsPage() {
                     <tr>
                       <td colSpan={columns.length} className="h-40 text-center">
                         <div className="flex flex-col items-center justify-center py-8">
-                          <Package className="h-8 w-8 text-muted-foreground opacity-50 mb-4" />
-                          <p className="text-muted-foreground font-medium">Nenhum produto encontrado</p>
+                          <Building2 className="h-8 w-8 text-muted-foreground opacity-50 mb-4" />
+                          <p className="text-muted-foreground font-medium">Nenhuma asseguradora encontrada</p>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Execute o SQL no Supabase para criar a tabela e inserir os produtos iniciais.
+                            Clique em &quot;Extrair das apólices&quot; para criar a partir das apólices existentes.
                           </p>
                         </div>
                       </td>
@@ -465,11 +510,14 @@ export default function ProductsPage() {
           </CardContent>
         </Card>
 
-        <Dialog open={isEditing && (!!selectedProduct || isCreating)} onOpenChange={(open) => !open && handleCancel()}>
+        <Dialog
+          open={isEditing && (!!selectedInsurer || isCreating)}
+          onOpenChange={(open) => !open && handleCancel()}
+        >
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle>
-                {isCreating ? "Novo Produto" : "Editar Produto"}
+                {isCreating ? "Nova Asseguradora" : "Editar Asseguradora"}
               </DialogTitle>
               <button onClick={handleCancel} className="rounded-lg p-2 hover:bg-muted">
                 <X className="h-5 w-5" />
@@ -477,24 +525,13 @@ export default function ProductsPage() {
             </div>
           </DialogHeader>
           <DialogContent>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold">Código</label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={editedProduct.code}
-                  onChange={(e) => setEditedProduct({ ...editedProduct, code: parseInt(e.target.value, 10) || 0 })}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold">Nome *</label>
-                <Input
-                  value={editedProduct.name}
-                  onChange={(e) => setEditedProduct({ ...editedProduct, name: e.target.value })}
-                  placeholder="Ex: AUTOMÓVEL"
-                />
-              </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Nome *</label>
+              <Input
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                placeholder="Ex: Porto Seguro"
+              />
             </div>
           </DialogContent>
           <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-border/50 bg-muted/5 flex items-center justify-end gap-2 flex-wrap shrink-0 mt-auto">

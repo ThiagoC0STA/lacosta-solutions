@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
-import { useClients, usePolicies, useProducts } from "@/hooks/use-supabase-data";
+import { useClients, usePolicies, useProducts, useInsurers } from "@/hooks/use-supabase-data";
 import {
   useReactTable,
   getCoreRowModel,
@@ -33,6 +33,7 @@ export default function RenewalsPage() {
   const { clients, updateClient, createClient } = useClients();
   const { policies, updatePolicy, deletePolicy, createPolicy } = usePolicies();
   const { products, createProduct } = useProducts();
+  const { insurers, createInsurer } = useInsurers();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "dueDate", desc: false },
   ]);
@@ -509,10 +510,10 @@ export default function RenewalsPage() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
-                  Renovações
+                  Apólices
                 </h1>
                 <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mt-1">
-                  Gerencie todas as renovações de apólices
+                  Gerencie todas as apólices
                 </p>
               </div>
             </div>
@@ -869,6 +870,8 @@ export default function RenewalsPage() {
           onCreateClient={(data) => createClient(data as any)}
           products={Array.isArray(products) ? products : []}
           onCreateProduct={(data) => createProduct(data)}
+          insurers={Array.isArray(insurers) ? insurers : []}
+          onCreateInsurer={(data) => createInsurer(data)}
         />
       </div>
     </AppLayout>

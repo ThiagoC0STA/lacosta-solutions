@@ -501,137 +501,6 @@ function ClientsPageContent() {
                   <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </div>
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                {!isCreating && selectedClient && (
-                  <>
-                    {!isEditing ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setIsEditing(true);
-                          setEditedClient({ ...selectedClient });
-                        }}
-                      >
-                        <Edit2 className="h-4 w-4 mr-2" />
-                        Editar
-                      </Button>
-                    ) : (
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            if (!selectedClient) return;
-                            setIsSaving(true);
-                            try {
-                              await updateClient({
-                                id: selectedClient.id,
-                                data: {
-                                  name: editedClient.name,
-                                  phone: editedClient.phone,
-                                  email: editedClient.email,
-                                  birthday: editedClient.birthday,
-                                },
-                              });
-                              setIsEditing(false);
-                              // Refresh client data - the query will update automatically
-                              setEditedClient({});
-                            } catch (error) {
-                              alert(`Erro ao salvar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
-                            } finally {
-                              setIsSaving(false);
-                            }
-                          }}
-                          disabled={isSaving}
-                        >
-                          <Save className="h-4 w-4 mr-2" />
-                          {isSaving ? "Salvando..." : "Salvar"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setIsEditing(false);
-                            setEditedClient({});
-                          }}
-                        >
-                          Cancelar
-                        </Button>
-                      </div>
-                    )}
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={async () => {
-                        if (!selectedClient) return;
-                        if (!confirm(`Tem certeza que deseja deletar o cliente "${selectedClient.name}"? Esta ação não pode ser desfeita.`)) return;
-                        setIsDeleting(true);
-                        try {
-                          if (selectedClient) {
-                            await deleteClient(selectedClient.id);
-                          }
-                          setSelectedClient(null);
-                        } catch (error) {
-                          alert(`Erro ao deletar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
-                        } finally {
-                          setIsDeleting(false);
-                        }
-                      }}
-                      disabled={isDeleting}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      {isDeleting ? "Deletando..." : "Deletar"}
-                    </Button>
-                  </>
-                )}
-                {isCreating && (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        if (!editedClient.name) {
-                          alert("Nome é obrigatório");
-                          return;
-                        }
-                        setIsSaving(true);
-                        try {
-                          await createClient({
-                            name: editedClient.name || "",
-                            phone: editedClient.phone,
-                            email: editedClient.email,
-                            birthday: editedClient.birthday,
-                            id: "",
-                          });
-                          setIsCreating(false);
-                          setIsEditing(false);
-                          setEditedClient({});
-                        } catch (error) {
-                          alert(`Erro ao criar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
-                        } finally {
-                          setIsSaving(false);
-                        }
-                      }}
-                      disabled={isSaving}
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {isSaving ? "Criando..." : "Criar"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsCreating(false);
-                        setIsEditing(false);
-                        setEditedClient({});
-                      }}
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                )}
-              </div>
             </div>
           </DialogHeader>
           {(selectedClient || isCreating) && (
@@ -966,6 +835,136 @@ function ClientsPageContent() {
               </Card>
               )}
             </DialogContent>
+          )}
+          {(selectedClient || isCreating) && (
+            <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-border/50 bg-muted/5 flex items-center justify-end gap-2 flex-wrap shrink-0 mt-auto">
+              {!isCreating && selectedClient && (
+                <>
+                  {!isEditing ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setIsEditing(true);
+                        setEditedClient({ ...selectedClient });
+                      }}
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          if (!selectedClient) return;
+                          setIsSaving(true);
+                          try {
+                            await updateClient({
+                              id: selectedClient.id,
+                              data: {
+                                name: editedClient.name,
+                                phone: editedClient.phone,
+                                email: editedClient.email,
+                                birthday: editedClient.birthday,
+                              },
+                            });
+                            setIsEditing(false);
+                            setEditedClient({});
+                          } catch (error) {
+                            alert(`Erro ao salvar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
+                          } finally {
+                            setIsSaving(false);
+                          }
+                        }}
+                        disabled={isSaving}
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                        {isSaving ? "Salvando..." : "Salvar"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsEditing(false);
+                          setEditedClient({});
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  )}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={async () => {
+                      if (!selectedClient) return;
+                      if (!confirm(`Tem certeza que deseja deletar o cliente "${selectedClient.name}"? Esta ação não pode ser desfeita.`)) return;
+                      setIsDeleting(true);
+                      try {
+                        await deleteClient(selectedClient.id);
+                        setSelectedClient(null);
+                      } catch (error) {
+                        alert(`Erro ao deletar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
+                      } finally {
+                        setIsDeleting(false);
+                      }
+                    }}
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {isDeleting ? "Deletando..." : "Deletar"}
+                  </Button>
+                </>
+              )}
+              {isCreating && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      if (!editedClient.name) {
+                        alert("Nome é obrigatório");
+                        return;
+                      }
+                      setIsSaving(true);
+                      try {
+                        await createClient({
+                          name: editedClient.name || "",
+                          phone: editedClient.phone,
+                          email: editedClient.email,
+                          birthday: editedClient.birthday,
+                          id: "",
+                        });
+                        setIsCreating(false);
+                        setIsEditing(false);
+                        setEditedClient({});
+                      } catch (error) {
+                        alert(`Erro ao criar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
+                      } finally {
+                        setIsSaving(false);
+                      }
+                    }}
+                    disabled={isSaving}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {isSaving ? "Criando..." : "Criar"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsCreating(false);
+                      setIsEditing(false);
+                      setEditedClient({});
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </Dialog>
 

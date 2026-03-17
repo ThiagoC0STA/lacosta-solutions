@@ -40,9 +40,9 @@ export function ConfirmModal({
           {title}
         </DialogTitle>
       </DialogHeader>
-      <DialogContent>
-        <p className="text-muted-foreground">{message}</p>
-        <div className="mt-6 flex justify-end gap-2">
+      <DialogContent className="flex flex-col">
+        <p className="text-muted-foreground flex-1">{message}</p>
+        <div className="mt-6 pt-4 border-t border-border/50 flex justify-end gap-2 bg-muted/5 -mx-4 -mb-4 px-4 pb-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {cancelLabel}
           </Button>

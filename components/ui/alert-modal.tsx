@@ -46,9 +46,9 @@ export function AlertModal({
           {title}
         </DialogTitle>
       </DialogHeader>
-      <DialogContent>
-        <p className="text-muted-foreground">{message}</p>
-        <div className="mt-6 flex justify-end">
+      <DialogContent className="flex flex-col">
+        <p className="text-muted-foreground flex-1">{message}</p>
+        <div className="mt-6 pt-4 border-t border-border/50 flex justify-end bg-muted/5 -mx-4 -mb-4 px-4 pb-4">
           <Button onClick={() => onOpenChange(false)}>OK</Button>
         </div>
       </DialogContent>

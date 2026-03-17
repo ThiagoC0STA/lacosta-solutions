@@ -26,10 +26,12 @@ import {
 } from "lucide-react";
 import { ClientCreateModal } from "@/components/client-create-modal";
 import { ProductCreateModal } from "@/components/product-create-modal";
+import { InsurerCreateModal } from "@/components/insurer-create-modal";
 import { UnsavedChangesModal } from "@/components/unsaved-changes-modal";
-import type { Client, Product, RenewalWithClient } from "@/types";
+import type { Client, Product, Insurer, RenewalWithClient } from "@/types";
 import { productDisplay } from "@/types";
 import { getProductDisplay } from "@/lib/product-helpers";
+import { getInsurerDisplay, insurerMatchesPolicy } from "@/lib/insurer-helpers";
 import { formatDate } from "@/lib/date-helpers";
 
 export const DUMMY_NEW_RENEWAL_ID = "dummy-new";
@@ -57,6 +59,8 @@ interface RenewalDetailModalProps {
   onCreateClient?: (data: Omit<Client, "id">) => Promise<Client>;
   products?: Product[];
   onCreateProduct?: (data: Omit<Product, "id">) => Promise<Product>;
+  insurers?: Insurer[];
+  onCreateInsurer?: (data: Omit<Insurer, "id">) => Promise<Insurer>;
 }
 
 export function RenewalDetailModal({
@@ -72,6 +76,8 @@ export function RenewalDetailModal({
   onCreateClient,
   products = [],
   onCreateProduct,
+  insurers = [],
+  onCreateInsurer,
 }: RenewalDetailModalProps) {
   const isCreateMode = renewal?.id === DUMMY_NEW_RENEWAL_ID;
   const [isEditing, setIsEditing] = useState(isCreateMode);
@@ -98,6 +104,7 @@ export function RenewalDetailModal({
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [showClientCreateModal, setShowClientCreateModal] = useState(false);
   const [showProductCreateModal, setShowProductCreateModal] = useState(false);
+  const [showInsurerCreateModal, setShowInsurerCreateModal] = useState(false);
 
   const hasUnsavedChanges = useCallback(() => {
     if (!renewal || !isEditing) return false;
@@ -324,46 +331,6 @@ export function RenewalDetailModal({
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
-          {(isCreateMode || !renewal.id.startsWith("dummy-")) && (
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-              {isCreateMode ? (
-                <div className="flex gap-1 sm:gap-1.5">
-                  <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="text-xs sm:text-sm shrink-0">
-                    <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                    <span className="hidden sm:inline">{isSaving ? "Criando..." : "Criar"}</span>
-                    <span className="sm:hidden">{isSaving ? "..." : "Criar"}</span>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleCancel} className="text-xs sm:text-sm shrink-0">
-                    Cancelar
-                  </Button>
-                </div>
-              ) : !isEditing ? (
-                <Button variant="outline" size="sm" onClick={handleEdit} className="text-xs sm:text-sm shrink-0">
-                  <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                  <span className="hidden sm:inline">Editar</span>
-                  <span className="sm:hidden">Editar</span>
-                </Button>
-              ) : (
-                <div className="flex gap-1 sm:gap-1.5">
-                  <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="text-xs sm:text-sm shrink-0">
-                    <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                    <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
-                    <span className="sm:hidden">{isSaving ? "..." : "Salvar"}</span>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleCancel} className="text-xs sm:text-sm shrink-0">
-                    Cancelar
-                  </Button>
-                </div>
-              )}
-              {!isCreateMode && (
-                <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting} className="text-xs sm:text-sm shrink-0">
-                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                  <span className="hidden sm:inline">{isDeleting ? "Deletando..." : "Deletar"}</span>
-                  <span className="sm:hidden">{isDeleting ? "..." : "Del"}</span>
-                </Button>
-              )}
-            </div>
-          )}
         </div>
       </DialogHeader>
       <DialogContent className="space-y-6">
@@ -543,19 +510,53 @@ export function RenewalDetailModal({
                   )}
                 </div>
                 <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
-                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <Building2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                    <span>Seguradora</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <Building2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span>Seguradora</span>
+                    </div>
+                    {insurers && insurers.length > 0 && onCreateInsurer && (isEditing || isCreateMode) && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowInsurerCreateModal(true)}
+                        className="shrink-0"
+                      >
+                        <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
+                        Nova Asseguradora
+                      </Button>
+                    )}
                   </div>
                   {(isEditing || isCreateMode) ? (
-                    <Input
-                      value={editedData.insurer || ""}
-                      onChange={(e) => handleInputChange("insurer", e.target.value)}
-                      placeholder="Seguradora"
-                      className="font-semibold"
-                    />
+                    insurers && insurers.length > 0 ? (
+                      <Select
+                        value={(() => {
+                          const v = (editedData.insurer ?? renewal.insurer ?? "").trim();
+                          if (!v) return "";
+                          const match = insurers.find((i) => insurerMatchesPolicy(i.name, v));
+                          return match ? match.name : v;
+                        })()}
+                        onChange={(e) => handleInputChange("insurer", e.target.value)}
+                        className="font-semibold w-full"
+                      >
+                        <option value="">Selecione uma asseguradora</option>
+                        {insurers.map((i) => (
+                          <option key={i.id} value={i.name}>
+                            {i.name}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : (
+                      <Input
+                        value={editedData.insurer || ""}
+                        onChange={(e) => handleInputChange("insurer", e.target.value)}
+                        placeholder="Seguradora"
+                        className="font-semibold"
+                      />
+                    )
                   ) : (
-                    <p className="font-semibold text-base">{renewal.insurer || "-"}</p>
+                    <p className="font-semibold text-base">{getInsurerDisplay(renewal.insurer, insurers) || "-"}</p>
                   )}
                 </div>
                 <div className="space-y-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/40 hover:bg-muted/60 transition-all hover:shadow-md border border-border/30">
@@ -803,6 +804,46 @@ export function RenewalDetailModal({
         )}
       </DialogContent>
 
+      {(isCreateMode || !renewal.id.startsWith("dummy-")) && (
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-border/50 bg-muted/5 flex items-center justify-end gap-2 flex-wrap shrink-0">
+          {isCreateMode ? (
+            <>
+              <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="text-xs sm:text-sm shrink-0">
+                <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                <span className="hidden sm:inline">{isSaving ? "Criando..." : "Criar"}</span>
+                <span className="sm:hidden">{isSaving ? "..." : "Criar"}</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCancel} className="text-xs sm:text-sm shrink-0">
+                Cancelar
+              </Button>
+            </>
+          ) : !isEditing ? (
+            <Button variant="outline" size="sm" onClick={handleEdit} className="text-xs sm:text-sm shrink-0">
+              <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+              Editar
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="text-xs sm:text-sm shrink-0">
+                <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
+                <span className="sm:hidden">{isSaving ? "..." : "Salvar"}</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCancel} className="text-xs sm:text-sm shrink-0">
+                Cancelar
+              </Button>
+            </>
+          )}
+          {!isCreateMode && (
+            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting} className="text-xs sm:text-sm shrink-0">
+              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+              <span className="hidden sm:inline">{isDeleting ? "Deletando..." : "Deletar"}</span>
+              <span className="sm:hidden">{isDeleting ? "..." : "Del"}</span>
+            </Button>
+          )}
+        </div>
+      )}
+
       <UnsavedChangesModal
         open={showCloseConfirm}
         onClose={() => setShowCloseConfirm(false)}
@@ -831,6 +872,18 @@ export function RenewalDetailModal({
           onCreated={(product) => {
             handleInputChange("product", productDisplay(product));
             setShowProductCreateModal(false);
+          }}
+        />
+      )}
+
+      {onCreateInsurer && (
+        <InsurerCreateModal
+          open={showInsurerCreateModal}
+          onClose={() => setShowInsurerCreateModal(false)}
+          onCreateInsurer={onCreateInsurer}
+          onCreated={(insurer) => {
+            handleInputChange("insurer", insurer.name);
+            setShowInsurerCreateModal(false);
           }}
         />
       )}

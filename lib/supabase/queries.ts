@@ -1,4 +1,4 @@
-import type { Client, Policy, Product } from "@/types";
+import type { Client, Policy, Product, Insurer } from "@/types";
 import { formatDateForStorage } from "@/lib/date-helpers";
 import { supabase } from "./client";
 
@@ -54,6 +54,54 @@ export async function deleteProduct(id: string): Promise<void> {
 
 export function formatProductLabel(product: Product): string {
   return `${product.code} - ${product.name}`;
+}
+
+// ============================================
+// INSURERS
+// ============================================
+
+export async function getInsurers(): Promise<Insurer[]> {
+  const { data, error } = await supabase
+    .from("insurers")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    name: row.name,
+  }));
+}
+
+export async function createInsurer(insurer: Omit<Insurer, "id">): Promise<Insurer> {
+  const { data, error } = await supabase
+    .from("insurers")
+    .insert({ name: insurer.name.trim() })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { id: data.id, name: data.name };
+}
+
+export async function updateInsurer(id: string, insurer: Partial<Omit<Insurer, "id">>): Promise<Insurer> {
+  const updateData: any = {};
+  if (insurer.name !== undefined) updateData.name = insurer.name.trim();
+
+  const { data, error } = await supabase
+    .from("insurers")
+    .update(updateData)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { id: data.id, name: data.name };
+}
+
+export async function deleteInsurer(id: string): Promise<void> {
+  const { error } = await supabase.from("insurers").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // ============================================
