@@ -3,7 +3,7 @@
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Gift, Sparkles, X, Phone, Mail, Calendar } from "lucide-react";
-import { formatDate, isBirthdayToday, isBirthdayThisMonth } from "@/lib/date-helpers";
+import { formatDate, isBirthdayToday, isBirthdayThisMonth, toLocalDate } from "@/lib/date-helpers";
 import { cn } from "@/lib/utils";
 import type { Client } from "@/types";
 
@@ -44,8 +44,8 @@ export function BirthdaysModal({
     return false;
   }).sort((a, b) => {
     if (!a.birthday || !b.birthday) return 0;
-    const dateA = typeof a.birthday === "string" ? new Date(a.birthday) : a.birthday;
-    const dateB = typeof b.birthday === "string" ? new Date(b.birthday) : b.birthday;
+    const dateA = toLocalDate(a.birthday);
+    const dateB = toLocalDate(b.birthday);
     return dateA.getDate() - dateB.getDate();
   });
 

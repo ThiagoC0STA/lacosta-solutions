@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
-import { parseDate } from "@/lib/date-helpers";
+import { parseDateFromExcel, parseExcelSerial, formatDateForStorage } from "@/lib/date-helpers";
 import { useClients, usePolicies } from "@/hooks/use-supabase-data";
 import { getPoliciesWithClients, getClients } from "@/lib/supabase/queries";
 import type { Client, Policy } from "@/types";
@@ -88,16 +88,19 @@ function detectColumnMapping(headers: string[]): Record<string, string> {
       mapping.birthday = header;
     }
     
-    // Vencimento - várias variações
+    // Vencimento / Renovação - várias variações
     if (!mapping.dueDate) {
       if (
         headerNormalized.includes("vencimento") ||
         headerNormalized.includes("venc") ||
         headerNormalized.includes("vencimentoapolice") ||
         headerNormalized.includes("vencimentoapol") ||
+        headerNormalized.includes("renovacao") ||
+        headerNormalized.includes("renova") ||
         headerLower.includes("vencimento apólice") ||
         headerLower.includes("vencimento apolice") ||
         headerLower.includes("data vencimento") ||
+        headerLower.includes("data renovação") ||
         headerLower.match(/vencimento.*apol/i)
       ) {
         mapping.dueDate = header;
@@ -178,7 +181,14 @@ export default function ImportPage() {
   const [status, setStatus] = useState<{
     type: "idle" | "success" | "error";
     message: string;
-    stats?: { clients: number; policies: number; skipped: number };
+    stats?: {
+      clients: number;
+      policies: number;
+      totalRows: number;
+      emptyRowsSkipped: number;
+      validationSkipped: number;
+      duplicateSkipped: number;
+    };
   }>({ type: "idle", message: "" });
 
   const processFile = useCallback(async (file: File) => {
@@ -253,7 +263,7 @@ export default function ImportPage() {
                   score += 4;
                   foundHeaders.push(cell);
                 }
-                if (cellLower.includes("vencimento") && (cellLower.includes("apolice") || cellLower.includes("apol"))) {
+                if ((cellLower.includes("vencimento") || cellLower.includes("venciment")) && (cellLower.includes("apolice") || cellLower.includes("apol"))) {
                   score += 6;
                   foundHeaders.push(cell);
                 }
@@ -488,10 +498,18 @@ export default function ImportPage() {
             return;
           }
 
+          // Filter out completely empty rows (Excel often has formatting that extends to many rows)
+          const rowsWithData = jsonData.filter((row) => {
+            const values = Object.values(row);
+            return values.some((v) => v !== undefined && v !== null && String(v).trim() !== "");
+          });
+          const emptyRowsSkipped = jsonData.length - rowsWithData.length;
+
           // Process rows
           const processedRows: ProcessedRow[] = [];
-          
-          jsonData.forEach((row) => {
+          let validationSkipped = 0;
+
+          rowsWithData.forEach((row) => {
             // Get client name or use email as fallback
             let clientName = String(row[columnMapping.clientName] || "").trim();
             
@@ -509,50 +527,51 @@ export default function ImportPage() {
               }
             }
             
-            // Handle Excel date serial numbers
+            // Handle Excel date serial numbers and Date objects (Brazil timezone-safe)
             let dueDate: Date | null = null;
             const dueDateValue = row[columnMapping.dueDate];
             
-            if (typeof dueDateValue === "number") {
-              // Excel serial date (days since 1900-01-01)
-              // Excel's epoch starts on 1900-01-01, but Excel incorrectly treats 1900 as a leap year
-              // Only treat as Excel date if it's a reasonable date serial number
+            if (dueDateValue instanceof Date) {
+              // XLSX with cellDates:true returns Date objects (UTC) - extract local date
+              dueDate = new Date(
+                dueDateValue.getUTCFullYear(),
+                dueDateValue.getUTCMonth(),
+                dueDateValue.getUTCDate()
+              );
+            } else if (typeof dueDateValue === "number") {
               if (dueDateValue > 1 && dueDateValue < 100000) {
-                const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
-                dueDate = new Date(excelEpoch.getTime() + dueDateValue * 24 * 60 * 60 * 1000);
+                dueDate = parseExcelSerial(dueDateValue);
               } else {
-                // Might be a year number (like 26), convert to date string first
-                const dateStr = String(dueDateValue);
-                dueDate = parseDate(dateStr);
+                dueDate = parseDateFromExcel(String(dueDateValue));
               }
             } else {
-              const dueDateStr = String(dueDateValue || "");
-              dueDate = parseDate(dueDateStr);
+              dueDate = parseDateFromExcel(String(dueDateValue || ""));
             }
             
             if (!clientName || !dueDate || isNaN(dueDate.getTime())) {
+              validationSkipped++;
               return; // Skip invalid rows
             }
 
             const phone = columnMapping.phone ? String(row[columnMapping.phone] || "").trim() : undefined;
             const email = columnMapping.email ? String(row[columnMapping.email] || "").trim() : undefined;
             
-            // Handle birthday - can be Excel serial number or string
+            // Handle birthday - Excel serial, Date object, or string (Brazil timezone-safe)
             let birthday: Date | undefined = undefined;
             if (columnMapping.birthday) {
               const birthdayValue = row[columnMapping.birthday];
-              if (typeof birthdayValue === "number") {
-                const excelEpoch = new Date(1899, 11, 30);
-                const parsed = new Date(excelEpoch.getTime() + birthdayValue * 24 * 60 * 60 * 1000);
-                if (!isNaN(parsed.getTime())) {
-                  birthday = parsed;
-                }
+              if (birthdayValue instanceof Date) {
+                birthday = new Date(
+                  birthdayValue.getUTCFullYear(),
+                  birthdayValue.getUTCMonth(),
+                  birthdayValue.getUTCDate()
+                );
+              } else if (typeof birthdayValue === "number" && birthdayValue > 1 && birthdayValue < 100000) {
+                const parsed = parseExcelSerial(birthdayValue);
+                if (!isNaN(parsed.getTime())) birthday = parsed;
               } else {
-                const birthdayStr = String(birthdayValue || "");
-                const parsed = parseDate(birthdayStr);
-                if (parsed) {
-                  birthday = parsed;
-                }
+                const parsed = parseDateFromExcel(String(birthdayValue || ""));
+                if (parsed) birthday = parsed;
               }
             }
             const insurer = columnMapping.insurer ? String(row[columnMapping.insurer] || "").trim() : undefined;
@@ -661,7 +680,7 @@ export default function ImportPage() {
             if (!client) return;
             
             const dueDate = typeof p.dueDate === "string" ? new Date(p.dueDate) : p.dueDate;
-            const dueDateStr = dueDate.toISOString().split("T")[0]; // Use date only (YYYY-MM-DD)
+            const dueDateStr = formatDateForStorage(dueDate);
             
             // Normalize client name for comparison
             const normalizedClientName = client.name.toLowerCase().trim();
@@ -693,9 +712,8 @@ export default function ImportPage() {
 
           // Normalize and filter out duplicates from processed rows
           const newRows = processedRows.filter((row) => {
-            const dueDateStr = (typeof row.dueDate === "string" 
-              ? new Date(row.dueDate) 
-              : row.dueDate).toISOString().split("T")[0];
+            const dueDate = typeof row.dueDate === "string" ? new Date(row.dueDate) : row.dueDate;
+            const dueDateStr = formatDateForStorage(dueDate);
             
             const normalizedClientName = row.clientName.toLowerCase().trim();
             
@@ -727,9 +745,9 @@ export default function ImportPage() {
             return !keysToCheck.some(key => existingUniqueKeys.has(key));
           });
           
-          const skipped = processedRows.length - newRows.length;
-          
-          console.log(`Verificação de duplicatas: ${processedRows.length} linhas processadas, ${skipped} duplicatas encontradas, ${newRows.length} novas linhas`);
+          const duplicateSkipped = processedRows.length - newRows.length;
+
+          console.log(`Import stats: ${jsonData.length} total rows, ${validationSkipped} validation skipped, ${processedRows.length} valid, ${duplicateSkipped} duplicates, ${newRows.length} new`);
 
           if (newRows.length === 0) {
             setStatus({ 
@@ -899,7 +917,10 @@ export default function ImportPage() {
             stats: {
               clients: createdClients.length,
               policies: policiesToCreate.length,
-              skipped,
+              totalRows: jsonData.length,
+              emptyRowsSkipped,
+              validationSkipped,
+              duplicateSkipped,
             },
           });
 
@@ -1007,11 +1028,18 @@ export default function ImportPage() {
                         <div className="mt-2 space-y-1 text-sm text-green-200">
                           <p>• {status.stats.clients} cliente(s) criado(s)</p>
                           <p>• {status.stats.policies} apólice(s) criada(s)</p>
-                          {status.stats.skipped > 0 && (
-                            <p>• {status.stats.skipped} linha(s) duplicada(s) ignorada(s)</p>
+                          <p>• {status.stats.totalRows} linha(s) no arquivo</p>
+                          {status.stats.emptyRowsSkipped > 0 && (
+                            <p>• {status.stats.emptyRowsSkipped} linha(s) vazia(s) ignorada(s)</p>
                           )}
-                </div>
-              )}
+                          {status.stats.validationSkipped > 0 && (
+                            <p>• {status.stats.validationSkipped} ignorada(s) por validação (sem nome ou data)</p>
+                          )}
+                          {status.stats.duplicateSkipped > 0 && (
+                            <p>• {status.stats.duplicateSkipped} duplicata(s) ignorada(s)</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

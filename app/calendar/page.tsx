@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useClients, usePolicies } from "@/hooks/use-supabase-data";
-import { formatDate, classifyDueStatus, isBirthdayToday } from "@/lib/date-helpers";
+import { formatDate, classifyDueStatus, isBirthdayToday, toLocalDate } from "@/lib/date-helpers";
 import { getStatusColor } from "@/lib/colors";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Gift, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -110,7 +110,7 @@ export default function CalendarPage() {
     renewalsWithClients
       .filter((r) => r.status === "active")
       .forEach((renewal) => {
-        const dueDate = typeof renewal.dueDate === "string" ? new Date(renewal.dueDate) : renewal.dueDate;
+        const dueDate = toLocalDate(renewal.dueDate);
         const dateKey = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`;
         if (!map.has(dateKey)) {
           map.set(dateKey, []);
@@ -126,7 +126,7 @@ export default function CalendarPage() {
     clients
       .filter((c) => c.birthday)
       .forEach((client) => {
-        const birthday = typeof client.birthday === "string" ? new Date(client.birthday) : client.birthday;
+        const birthday = toLocalDate(client.birthday!);
         if (!birthday) return;
         const dateKey = `${year}-${String(birthday.getMonth() + 1).padStart(2, "0")}-${String(birthday.getDate()).padStart(2, "0")}`;
         if (!map.has(dateKey)) {

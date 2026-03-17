@@ -8,7 +8,7 @@ import {
   differenceInDays,
   startOfToday,
 } from "date-fns";
-import { classifyDueStatus } from "./date-helpers";
+import { classifyDueStatus, toLocalDate } from "./date-helpers";
 
 export function computeDashboardStats(
   policies: Policy[],
@@ -17,8 +17,7 @@ export function computeDashboardStats(
   const today = startOfToday();
 
   const overdue = policies.filter((p) => {
-    const dueDate =
-      typeof p.dueDate === "string" ? new Date(p.dueDate) : p.dueDate;
+    const dueDate = toLocalDate(p.dueDate);
     return differenceInDays(dueDate, today) < 0 && p.status === "active";
   }).length;
 
@@ -39,16 +38,14 @@ export function computeDashboardStats(
 
   const birthdaysThisMonth = clients.filter((c) => {
     if (!c.birthday) return false;
-    const birthday =
-      typeof c.birthday === "string" ? new Date(c.birthday) : c.birthday;
+    const birthday = toLocalDate(c.birthday);
     // Compare only month, ignore year
     return birthday.getMonth() === today.getMonth();
   }).length;
 
   const birthdaysToday = clients.filter((c) => {
     if (!c.birthday) return false;
-    const birthday =
-      typeof c.birthday === "string" ? new Date(c.birthday) : c.birthday;
+    const birthday = toLocalDate(c.birthday);
     // Compare only month and day, ignore year
     return birthday.getMonth() === today.getMonth() && birthday.getDate() === today.getDate();
   }).length;
@@ -70,10 +67,8 @@ export function getTopRenewals(
   return renewals
     .filter((r) => r.status === "active")
     .sort((a, b) => {
-      const dateA =
-        typeof a.dueDate === "string" ? new Date(a.dueDate) : a.dueDate;
-      const dateB =
-        typeof b.dueDate === "string" ? new Date(b.dueDate) : b.dueDate;
+      const dateA = toLocalDate(a.dueDate);
+      const dateB = toLocalDate(b.dueDate);
       return dateA.getTime() - dateB.getTime();
     })
     .slice(0, limit);
@@ -83,8 +78,7 @@ export function getTodaysBirthdays(clients: Client[]): Client[] {
   const today = new Date();
   return clients.filter((c) => {
     if (!c.birthday) return false;
-    const birthday =
-      typeof c.birthday === "string" ? new Date(c.birthday) : c.birthday;
+    const birthday = toLocalDate(c.birthday);
     // Compare only month and day, ignore year
     return birthday.getMonth() === today.getMonth() && birthday.getDate() === today.getDate();
   });
@@ -100,8 +94,7 @@ export function getRenewalsByMonth(
     const monthKey = `${month.getMonth() + 1}/${month.getFullYear()}`;
     result[monthKey] = renewals.filter((r) => {
       if (r.status !== "active") return false;
-      const dueDate =
-        typeof r.dueDate === "string" ? new Date(r.dueDate) : r.dueDate;
+      const dueDate = toLocalDate(r.dueDate);
       return (
         dueDate.getMonth() === month.getMonth() &&
         dueDate.getFullYear() === month.getFullYear()

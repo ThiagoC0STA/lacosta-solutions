@@ -1,4 +1,5 @@
 import type { Client, Policy } from "@/types";
+import { formatDateForStorage } from "@/lib/date-helpers";
 import { supabase } from "./client";
 
 // ============================================
@@ -59,7 +60,7 @@ export async function createClient(
       phone: client.phone,
       email: client.email,
       birthday: client.birthday
-        ? new Date(client.birthday).toISOString().split("T")[0]
+        ? formatDateForStorage(client.birthday)
         : null,
     })
     .select()
@@ -79,7 +80,7 @@ export async function updateClient(
   if (client.email !== undefined) updateData.email = client.email;
   if (client.birthday !== undefined) {
     updateData.birthday = client.birthday
-      ? new Date(client.birthday).toISOString().split("T")[0]
+      ? formatDateForStorage(client.birthday)
       : null;
   }
 
@@ -107,7 +108,7 @@ export async function createClientsBatch(
     phone: client.phone,
     email: client.email,
     birthday: client.birthday
-      ? new Date(client.birthday).toISOString().split("T")[0]
+      ? formatDateForStorage(client.birthday)
       : null,
   }));
 
@@ -198,7 +199,7 @@ export async function createPolicy(
       policy_number: policy.policyNumber,
       insurer: policy.insurer,
       product: policy.product,
-      due_date: new Date(policy.dueDate).toISOString().split("T")[0],
+      due_date: formatDateForStorage(policy.dueDate),
       premium: policy.premium,
       status: policy.status,
       notes: policy.notes,
@@ -221,7 +222,7 @@ export async function updatePolicy(
   if (policy.insurer !== undefined) updateData.insurer = policy.insurer;
   if (policy.product !== undefined) updateData.product = policy.product;
   if (policy.dueDate !== undefined) {
-    updateData.due_date = new Date(policy.dueDate).toISOString().split("T")[0];
+    updateData.due_date = formatDateForStorage(policy.dueDate);
   }
   if (policy.premium !== undefined) updateData.premium = policy.premium;
   if (policy.status !== undefined) updateData.status = policy.status;
@@ -251,7 +252,7 @@ export async function createPoliciesBatch(
     policy_number: policy.policyNumber,
     insurer: policy.insurer,
     product: policy.product,
-    due_date: new Date(policy.dueDate).toISOString().split("T")[0],
+      due_date: formatDateForStorage(policy.dueDate),
     premium: policy.premium,
     status: policy.status,
     notes: policy.notes,
