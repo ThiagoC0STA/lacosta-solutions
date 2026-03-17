@@ -1,76 +1,76 @@
-# Lacosta Solutions - Product Roadmap
+# Lacosta Solutions - Roadmap do Produto
 
-Ideas and priorities for system evolution.
-
----
-
-## High Impact
-
-- [ ] **1. Email / WhatsApp Reminders**
-  - Send automatic reminders X days before policy expiration (30, 15, 7 days)
-  - Reduce forgotten renewals and lost renewals
-
-- [ ] **2. Client History**
-  - View all past policies and renewals per client
-  - Track total premiums and commission over time
-
-- [ ] **3. Revenue & Cash Flow Forecast**
-  - Expected revenue per month based on due dates and premiums
-  - Commission forecast by period
+Ideias e prioridades para evolução do sistema.
 
 ---
 
-## Medium Impact
+## Alto Impacto
 
-- [ ] **4. Dashboard Home**
-  - Urgent renewals, renewals this month, commission this month at a glance
-  - Replace the need to dig into each section
+- [ ] **1. Lembretes por Email / WhatsApp**
+  - Enviar lembretes automáticos X dias antes do vencimento (30, 15, 7 dias)
+  - Reduzir renovações esquecidas e clientes perdidos
 
-- [ ] **5. Document Storage**
-  - Upload policy PDFs, receipts, documents per policy
-  - Keep everything organized in one place
+- [ ] **2. Histórico do Cliente**
+  - Ver todas as apólices e renovações passadas por cliente
+  - Acompanhar prêmios e comissões totais ao longo do tempo
 
-- [ ] **6. Global Search**
-  - Search by name, plate, CPF/CNPJ, insurer across the system
-  - Quick access to any client or policy
-
-- [ ] **7. Bulk Actions**
-  - Mark multiple policies as inactive, export selected, etc.
-  - Save time on repetitive operations
+- [ ] **3. Previsão de Receita e Fluxo de Caixa**
+  - Receita esperada por mês com base em vencimentos e prêmios
+  - Previsão de comissão por período
 
 ---
 
-## Differentiation
+## Impacto Médio
 
-- [ ] **8. WhatsApp Business API Integration**
-  - Send reminders and personalized messages automatically
+- [ ] **4. Dashboard Inicial**
+  - Renovações urgentes, do mês e comissão do mês em um só lugar
+  - Evita precisar navegar em cada seção
 
-- [ ] **9. Retention Analytics**
-  - % of clients renewed vs. canceled per period
-  - Identify patterns and improvement opportunities
+- [ ] **5. Armazenamento de Documentos**
+  - Fazer upload de PDFs de apólices, recibos e documentos por apólice
+  - Tudo organizado em um só lugar
 
-- [ ] **10. Commission by Seller/Agent**
-  - If there are multiple agents, track performance per person
-  - Sales/commission reports by agent
+- [ ] **6. Busca Global**
+  - Buscar por nome, placa, CPF/CNPJ, seguradora em todo o sistema
+  - Acesso rápido a qualquer cliente ou apólice
+
+- [ ] **7. Ações em Lote**
+  - Marcar várias apólices como inativas, exportar selecionadas, etc.
+  - Economizar tempo em operações repetitivas
+
+---
+
+## Diferenciação
+
+- [ ] **8. Integração API WhatsApp Business**
+  - Enviar lembretes e mensagens personalizadas automaticamente
+
+- [ ] **9. Análise de Retenção**
+  - % de clientes renovados vs. cancelados por período
+  - Identificar padrões e oportunidades de melhoria
+
+- [ ] **10. Comissão por Vendedor/Corretor**
+  - Se houver vários corretores, acompanhar desempenho por pessoa
+  - Relatórios de vendas/comissão por corretor
 
 - [ ] **11. PWA (Progressive Web App)**
-  - Install on smartphone as an app
-  - Access in the field during visits
+  - Instalar no celular como app
+  - Acesso em campo durante visitas
 
 ---
 
-## Suggested Order
+## Ordem Sugerida
 
-| Phase  | Features                                           |
-|--------|----------------------------------------------------|
-| Short  | Email reminders + Dashboard home                   |
-| Medium | Client history + Revenue forecast                   |
-| Long   | WhatsApp integration + Document storage + PWA      |
+| Fase   | Funcionalidades                                        |
+|--------|--------------------------------------------------------|
+| Curto  | Lembretes por email + Dashboard inicial                |
+| Médio  | Histórico do cliente + Previsão de receita             |
+| Longo  | Integração WhatsApp + Armazenamento de docs + PWA      |
 
 ---
 
-## Notes
+## Notas
 
-- Start with **automatic reminders** for fastest client impact
-- Dashboard improves daily usability
-- Document storage adds security and organization
+- Começar por **lembretes automáticos** para maior impacto rápido
+- Dashboard melhora o uso diário
+- Armazenamento de documentos aumenta segurança e organização
