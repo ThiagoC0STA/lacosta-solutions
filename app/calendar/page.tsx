@@ -481,7 +481,8 @@ export default function CalendarPage() {
           );
         })()}
 
-        {/* Renewal Detail Modal */}
+        {/* Renewal Detail Modal - only mount when renewal is selected to avoid hooks order issues */}
+        {selectedRenewal && (
         <RenewalDetailModal
           renewal={selectedRenewal}
           onClose={() => setSelectedRenewal(null)}
@@ -494,7 +495,8 @@ export default function CalendarPage() {
           onCreateProduct={(data) => createProduct(data)}
           insurers={Array.isArray(insurers) ? insurers : []}
           onCreateInsurer={(data) => createInsurer(data)}
-        />      
+        />
+        )}
         </div>
     </AppLayout>
   );

@@ -1,4 +1,4 @@
-import type { Client, Policy, Product, Insurer } from "@/types";
+import type { Client, Policy, Product, Insurer, PolicyDocument } from "@/types";
 import { formatDateForStorage } from "@/lib/date-helpers";
 import { supabase } from "./client";
 
@@ -447,6 +447,55 @@ export async function deleteAllClients(): Promise<void> {
     const { error } = await supabase.from("clients").delete().in("id", ids);
     if (error) throw error;
   }
+}
+
+// ============================================
+// POLICY DOCUMENTS
+// ============================================
+
+export async function getPolicyDocuments(policyId: string): Promise<PolicyDocument[]> {
+  const { data, error } = await supabase
+    .from("policy_documents")
+    .select("*")
+    .eq("policy_id", policyId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    policyId: row.policy_id,
+    name: row.name,
+    fileUrl: row.file_url,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function createPolicyDocument(
+  doc: Omit<PolicyDocument, "id" | "createdAt">
+): Promise<PolicyDocument> {
+  const { data, error } = await supabase
+    .from("policy_documents")
+    .insert({
+      policy_id: doc.policyId,
+      name: doc.name,
+      file_url: doc.fileUrl,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return {
+    id: data.id,
+    policyId: data.policy_id,
+    name: data.name,
+    fileUrl: data.file_url,
+    createdAt: data.created_at,
+  };
+}
+
+export async function deletePolicyDocument(id: string): Promise<void> {
+  const { error } = await supabase.from("policy_documents").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // ============================================

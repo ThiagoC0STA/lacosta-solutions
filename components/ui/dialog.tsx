@@ -8,9 +8,10 @@ interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
+  size?: "default" | "xl";
 }
 
-export function Dialog({ open, onOpenChange, children }: DialogProps) {
+export function Dialog({ open, onOpenChange, children, size = "default" }: DialogProps) {
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -30,7 +31,10 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
         className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md animate-in fade-in-0 h-full w-full"
         onClick={() => onOpenChange(false)}
       />
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-[95vw] sm:max-w-4xl -translate-x-1/2 -translate-y-1/2 transform px-2 sm:px-4 animate-in fade-in-0 zoom-in-95 duration-200">
+      <div className={cn(
+        "fixed left-1/2 top-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 transform px-2 sm:px-4 animate-in fade-in-0 zoom-in-95 duration-200",
+        size === "xl" ? "max-w-[95vw] sm:max-w-7xl" : "max-w-[95vw] sm:max-w-4xl"
+      )}>
         <div 
           className="relative bg-background rounded-xl sm:rounded-2xl shadow-[0_20px_25px_-5px_rgb(0_0_0_/_0.1),0_10px_10px_-5px_rgb(0_0_0_/_0.04)] border border-border/50 p-0 min-h-[min(300px,50vh)] max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/5 before:via-transparent before:to-transparent before:pointer-events-none"
           onClick={(e) => e.stopPropagation()}

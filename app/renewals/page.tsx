@@ -856,7 +856,8 @@ export default function RenewalsPage() {
           </CardContent>
         </Card>
 
-        {/* Renewal Detail Modal */}
+        {/* Renewal Detail Modal - only mount when renewal is selected to avoid hooks order issues */}
+        {selectedRenewal && (
         <RenewalDetailModal
           renewal={selectedRenewal}
           onClose={() => setSelectedRenewal(null)}
@@ -873,6 +874,7 @@ export default function RenewalsPage() {
           insurers={Array.isArray(insurers) ? insurers : []}
           onCreateInsurer={(data) => createInsurer(data)}
         />
+        )}
       </div>
     </AppLayout>
   );

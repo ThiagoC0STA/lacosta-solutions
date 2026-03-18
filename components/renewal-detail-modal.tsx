@@ -28,6 +28,9 @@ import { ClientCreateModal } from "@/components/client-create-modal";
 import { ProductCreateModal } from "@/components/product-create-modal";
 import { InsurerCreateModal } from "@/components/insurer-create-modal";
 import { UnsavedChangesModal } from "@/components/unsaved-changes-modal";
+import { PolicyPdfPreview } from "@/components/policy-pdf-preview";
+import { PolicyPdfUpload } from "@/components/policy-pdf-upload";
+import { usePolicyDocuments } from "@/hooks/use-supabase-data";
 import type { Client, Product, Insurer, RenewalWithClient } from "@/types";
 import { productDisplay } from "@/types";
 import { getProductDisplay } from "@/lib/product-helpers";
@@ -305,13 +308,34 @@ export function RenewalDetailModal({
     setEditedData((prev) => ({ ...prev, premium }));
   }, []);
 
+  const policyIdForDocs =
+    renewal && renewal.id !== DUMMY_NEW_RENEWAL_ID && !renewal.id.startsWith("dummy-")
+      ? renewal.id
+      : null;
+  const {
+    documents: policyDocuments,
+    createDocument: createPolicyDoc,
+    deleteDocument: deletePolicyDoc,
+    isCreating: isCreatingPolicyDoc,
+    isDeleting: isDeletingPolicyDoc,
+  } = usePolicyDocuments(policyIdForDocs);
+
+  const handleUploadPdf = useCallback(
+    async (fileUrl: string, name: string) => {
+      if (!policyIdForDocs) return;
+      await createPolicyDoc({ policyId: policyIdForDocs, name, fileUrl });
+    },
+    [policyIdForDocs, createPolicyDoc]
+  );
+
   if (!renewal) return null;
 
   const clientPolicies = allPolicies.filter((p) => p.clientId === renewal.clientId);
   const showAllPolicies = clientPolicies.length > 1 && !renewal.id.startsWith("dummy-");
+  const isRealPolicy = policyIdForDocs !== null;
 
   return (
-    <Dialog open={!!renewal} onOpenChange={(open) => !open && requestClose()}>
+    <Dialog open={!!renewal} onOpenChange={(open) => !open && requestClose()} size="xl">
       <DialogHeader>
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
@@ -333,7 +357,8 @@ export function RenewalDetailModal({
           </div>
         </div>
       </DialogHeader>
-      <DialogContent className="space-y-6">
+      <DialogContent className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-[1fr,minmax(400px,520px)] lg:gap-6 lg:items-start">
+        <div className="space-y-6 min-w-0">
         {/* Client Info Card */}
         <Card className="relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
@@ -758,9 +783,37 @@ export function RenewalDetailModal({
             </CardContent>
           </Card>
 
-        {/* All Policies Card */}
+          </div>
+
+          {/* PDF Section - Right column on large screens */}
+          {isRealPolicy && (
+            <Card className="relative overflow-hidden shrink-0 lg:sticky lg:top-0 self-start">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+              <CardHeader className="pb-3 sm:pb-4 relative">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2 sm:gap-2.5">
+                  <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
+                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                  </div>
+                  <span className="text-sm sm:text-base lg:text-lg">PDFs da Apólice</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 relative">
+                <PolicyPdfUpload
+                  policyId={renewal.id}
+                  documents={policyDocuments}
+                  onUpload={handleUploadPdf}
+                  onDelete={deletePolicyDoc}
+                  isCreating={isCreatingPolicyDoc}
+                  isDeleting={isDeletingPolicyDoc}
+                />
+                <PolicyPdfPreview documents={policyDocuments} className="mt-3" />
+              </CardContent>
+            </Card>
+          )}
+
+        {/* All Policies Card - Full width below grid */}
         {showAllPolicies && onSelectPolicy && (
-          <Card className="relative overflow-hidden">
+          <Card className="relative overflow-hidden lg:col-span-2">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
             <CardHeader className="pb-3 sm:pb-4 relative">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2 sm:gap-2.5">

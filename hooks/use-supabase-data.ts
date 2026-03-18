@@ -6,14 +6,17 @@ import {
   createInsurer,
   createPoliciesBatch,
   createPolicy,
+  createPolicyDocument,
   createProduct,
   deleteClient,
   deleteInsurer,
   deletePolicy,
+  deletePolicyDocument,
   deleteProduct,
   getClients,
   getInsurers,
   getPolicies,
+  getPolicyDocuments,
   getProducts,
   updateClient,
   updateInsurer,
@@ -27,7 +30,7 @@ import {
   restoreFromBackup,
   type Backup,
 } from "@/lib/supabase/backup-queries";
-import type { Client, Policy, Product, Insurer } from "@/types";
+import type { Client, Policy, PolicyDocument, Product, Insurer } from "@/types";
 import { useMutation, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 
 // ============================================
@@ -265,6 +268,48 @@ export function useInsurers() {
     deleteInsurer: deleteMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+  };
+}
+
+// ============================================
+// POLICY DOCUMENTS
+// ============================================
+
+export function usePolicyDocuments(policyId: string | null) {
+  const queryClient = useQueryClient();
+
+  const {
+    data: documents = [] as PolicyDocument[],
+    isLoading,
+    error,
+  } = useQuery<PolicyDocument[]>({
+    queryKey: ["policy-documents", policyId],
+    queryFn: () => getPolicyDocuments(policyId!),
+    enabled: !!policyId,
+  }) as UseQueryResult<PolicyDocument[], Error>;
+
+  const createMutation = useMutation<PolicyDocument, Error, Omit<PolicyDocument, "id" | "createdAt">>({
+    mutationFn: createPolicyDocument,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["policy-documents", policyId] });
+    },
+  });
+
+  const deleteMutation = useMutation<void, Error, string>({
+    mutationFn: deletePolicyDocument,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["policy-documents", policyId] });
+    },
+  });
+
+  return {
+    documents,
+    isLoading,
+    error,
+    createDocument: createMutation.mutateAsync,
+    deleteDocument: deleteMutation.mutateAsync,
+    isCreating: createMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
 }

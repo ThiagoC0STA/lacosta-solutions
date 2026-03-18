@@ -50,3 +50,11 @@ export interface Insurer {
   logoUrl?: string;
 }
 
+export interface PolicyDocument {
+  id: string;
+  policyId: string;
+  name: string;
+  fileUrl: string;
+  createdAt: string;
+}
+
