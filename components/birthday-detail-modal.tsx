@@ -1,10 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Gift, Sparkles, X, Phone, Mail, Calendar, MessageCircle, FileText, Building2, Package, DollarSign, Info } from "lucide-react";
-import { formatDate, isBirthdayToday } from "@/lib/date-helpers";
+import { Input } from "@/components/ui/input";
+import { Gift, Sparkles, X, Phone, Mail, Calendar, MessageCircle, FileText, Building2, Package, DollarSign, Info, Edit2, Save } from "lucide-react";
+import { formatDate, isBirthdayToday, toLocalDate, toDateStringLocal } from "@/lib/date-helpers";
 import { cn } from "@/lib/utils";
 import type { Client, Policy, Product } from "@/types";
 import { getProductDisplay } from "@/lib/product-helpers";
@@ -15,6 +17,7 @@ interface BirthdayDetailModalProps {
   client: Client | null;
   policies?: Policy[];
   products?: Product[];
+  onUpdateClient?: (clientId: string, data: Partial<{ name: string; phone?: string; email?: string; birthday?: Date | string }>) => Promise<void>;
 }
 
 export function BirthdayDetailModal({
@@ -23,8 +26,47 @@ export function BirthdayDetailModal({
   client,
   policies = [],
   products = [],
+  onUpdateClient,
 }: BirthdayDetailModalProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedBirthday, setEditedBirthday] = useState<string>("");
+  const [editedPhone, setEditedPhone] = useState<string>("");
+  const [editedEmail, setEditedEmail] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+
   if (!client) return null;
+
+  const startEditing = () => {
+    const bd = client.birthday ? toLocalDate(client.birthday) : null;
+    setEditedBirthday(bd ? toDateStringLocal(bd) : "");
+    setEditedPhone(client.phone || "");
+    setEditedEmail(client.email || "");
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditedBirthday("");
+    setEditedPhone("");
+    setEditedEmail("");
+  };
+
+  const handleSave = async () => {
+    if (!onUpdateClient) return;
+    setIsSaving(true);
+    try {
+      const data: Partial<{ birthday?: Date | string; phone?: string; email?: string }> = {};
+      if (editedBirthday) data.birthday = editedBirthday;
+      if (editedPhone !== (client.phone || "")) data.phone = editedPhone || undefined;
+      if (editedEmail !== (client.email || "")) data.email = editedEmail || undefined;
+      await onUpdateClient(client.id, data);
+      setIsEditing(false);
+    } catch (e) {
+      console.error("Failed to update client:", e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const isToday = isBirthdayToday(client.birthday);
   const clientPolicies = policies.filter((p) => p.clientId === client.id);
@@ -67,13 +109,33 @@ export function BirthdayDetailModal({
                 )}
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="rounded-lg p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 shrink-0 z-20"
-              aria-label="Fechar"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {onUpdateClient && (
+                isEditing ? (
+                  <>
+                    <Button variant="outline" size="sm" onClick={cancelEditing} disabled={isSaving}>
+                      Cancelar
+                    </Button>
+                    <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={startEditing}>
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                )
+              )}
+              <button
+                onClick={onClose}
+                className="rounded-lg p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-muted hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 shrink-0 z-20"
+                aria-label="Fechar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </DialogHeader>
@@ -114,7 +176,7 @@ export function BirthdayDetailModal({
           </CardHeader>
           <CardContent className="relative z-10 space-y-4">
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-              {client.birthday && (
+              {(client.birthday || isEditing) && (
                 <div className={cn(
                   "space-y-2 p-4 rounded-xl border transition-all",
                   isToday
@@ -127,32 +189,60 @@ export function BirthdayDetailModal({
                       {isToday ? "Aniversário Hoje! 🎉" : "Data de Nascimento"}
                     </span>
                   </div>
-                  <p className={cn(
-                    "font-bold text-lg",
-                    isToday ? "text-purple-100" : "text-foreground"
-                  )}>
-                    {formatDate(client.birthday)}
-                  </p>
+                  {isEditing ? (
+                    <Input
+                      type="date"
+                      value={editedBirthday}
+                      onChange={(e) => setEditedBirthday(e.target.value)}
+                      className="font-semibold"
+                    />
+                  ) : (
+                    <p className={cn(
+                      "font-bold text-lg",
+                      isToday ? "text-purple-100" : "text-foreground"
+                    )}>
+                      {client.birthday ? formatDate(client.birthday) : "-"}
+                    </p>
+                  )}
                 </div>
               )}
               
-              {client.phone && (
+              {(client.phone || isEditing) && (
                 <div className="space-y-2 p-4 rounded-xl bg-muted/40 border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <Phone className="h-4 w-4" />
                     <span>Telefone</span>
                   </div>
-                  <p className="font-semibold text-base break-all">{client.phone}</p>
+                  {isEditing ? (
+                    <Input
+                      value={editedPhone}
+                      onChange={(e) => setEditedPhone(e.target.value)}
+                      placeholder="Telefone"
+                      className="font-semibold"
+                    />
+                  ) : (
+                    <p className="font-semibold text-base break-all">{client.phone || "-"}</p>
+                  )}
                 </div>
               )}
               
-              {client.email && (
+              {(client.email || isEditing) && (
                 <div className="space-y-2 p-4 rounded-xl bg-muted/40 border border-border/30">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <Mail className="h-4 w-4" />
                     <span>Email</span>
                   </div>
-                  <p className="font-semibold text-sm break-all">{client.email}</p>
+                  {isEditing ? (
+                    <Input
+                      type="email"
+                      value={editedEmail}
+                      onChange={(e) => setEditedEmail(e.target.value)}
+                      placeholder="Email"
+                      className="font-semibold"
+                    />
+                  ) : (
+                    <p className="font-semibold text-sm break-all">{client.email || "-"}</p>
+                  )}
                 </div>
               )}
               
@@ -165,7 +255,21 @@ export function BirthdayDetailModal({
               </div>
             </div>
 
-            {client.phone && (
+            {isEditing ? (
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex-1 h-12 font-semibold"
+                >
+                  <Save className="h-5 w-5 mr-2" />
+                  {isSaving ? "Salvando..." : "Salvar"}
+                </Button>
+                <Button variant="outline" onClick={cancelEditing} className="flex-1 h-12">
+                  Cancelar
+                </Button>
+              </div>
+            ) : client.phone ? (
               <Button
                 onClick={handleWhatsApp}
                 className={cn(
@@ -178,7 +282,7 @@ export function BirthdayDetailModal({
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Enviar Parabéns no WhatsApp
               </Button>
-            )}
+            ) : null}
           </CardContent>
         </Card>
 

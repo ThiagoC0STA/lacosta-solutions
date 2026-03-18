@@ -127,7 +127,7 @@ export function DayEventsModal({
                 </h3>
                 <div className="space-y-2">
                   {renewals.map((renewal) => {
-                    const status = classifyDueStatus(renewal.dueDate);
+                    const status = classifyDueStatus(renewal.dueDate, renewal.product);
                     const statusKey = status === "overdue" ? "overdue" : status === "d7" ? "urgent" : "default";
                     const colors = getStatusColor(statusKey);
                     return (

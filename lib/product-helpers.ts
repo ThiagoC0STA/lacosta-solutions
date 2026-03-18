@@ -26,3 +26,16 @@ export function extractProductCodeFromPolicy(value: string | undefined): number 
   const num = parseInt(part || "", 10);
   return isNaN(num) ? null : num;
 }
+
+/**
+ * Resolves product code from value, including plain names via products list.
+ * "Frota" with products [{code:7,name:"FROTA"}] returns 7.
+ */
+export function resolveProductCode(value: string | undefined, products: Product[]): number | null {
+  const code = extractProductCodeFromPolicy(value);
+  if (code !== null) return code;
+  if (!value?.trim() || !products?.length) return null;
+  const nameLower = value.trim().toLowerCase();
+  const match = products.find((p) => p.name.toLowerCase() === nameLower);
+  return match ? match.code : null;
+}

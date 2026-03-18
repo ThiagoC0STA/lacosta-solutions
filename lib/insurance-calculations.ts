@@ -75,7 +75,7 @@ export function parseNotesFromPolicy(notes: string | undefined): ParsedNotes {
   const result: ParsedNotes = {};
   if (!notes) return result;
 
-  const plateMatch = notes.match(/Placa:\s*(\w+)/i);
+  const plateMatch = notes.match(/Placa:\s*([A-Za-z0-9-]+)/i);
   if (plateMatch) result.plate = plateMatch[1].trim();
 
   const iofMatch = notes.match(/IOF:\s*R\$\s*([\d.,]+)/i);

@@ -47,7 +47,7 @@ import {
   parseBRLToNumber,
   formatBRLForInput,
 } from "@/lib/insurance-calculations";
-import { formatPhoneBR, formatCPFCNPJ } from "@/lib/masks";
+import { formatPhoneBR, formatCPFCNPJ, formatPlate } from "@/lib/masks";
 
 interface RenewalDetailModalProps {
   renewal: RenewalWithClient | null;
@@ -156,7 +156,7 @@ export function RenewalDetailModal({
       setIsEditing(true);
       setEditedData({ ...renewal });
       const parsed = parseNotesFromPolicy(renewal.notes);
-      setEditedPlate(parsed.plate || "");
+      setEditedPlate(formatPlate(parsed.plate || ""));
       setEditedCommissionRate(parsed.commissionRate ?? 15);
     }
   }, [renewal]);
@@ -703,8 +703,9 @@ export function RenewalDetailModal({
                   {(isEditing || isCreateMode) ? (
                     <Input
                       value={editedPlate}
-                      onChange={(e) => setEditedPlate(e.target.value.toUpperCase())}
-                      placeholder="ABC1234"
+                      onChange={(e) => setEditedPlate(formatPlate(e.target.value))}
+                      placeholder="ABC-1234"
+                      maxLength={8}
                       className="font-semibold"
                     />
                   ) : (
@@ -794,7 +795,7 @@ export function RenewalDetailModal({
                   <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm">
                     <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                   </div>
-                  <span className="text-sm sm:text-base lg:text-lg">PDFs da Apólice</span>
+                  <span className="text-sm sm:text-base lg:text-lg">PDFs</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 relative">
@@ -858,42 +859,46 @@ export function RenewalDetailModal({
       </DialogContent>
 
       {(isCreateMode || !renewal.id.startsWith("dummy-")) && (
-        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-border/50 bg-muted/5 flex items-center justify-end gap-2 flex-wrap shrink-0">
-          {isCreateMode ? (
-            <>
-              <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="text-xs sm:text-sm shrink-0">
-                <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                <span className="hidden sm:inline">{isSaving ? "Criando..." : "Criar"}</span>
-                <span className="sm:hidden">{isSaving ? "..." : "Criar"}</span>
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-border/50 bg-muted/5 flex items-center justify-between gap-2 flex-wrap shrink-0">
+          <div className="flex items-center gap-2">
+            {!isCreateMode && (
+              <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting} className="text-xs sm:text-sm shrink-0">
+                <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                <span className="hidden sm:inline">{isDeleting ? "Deletando..." : "Deletar"}</span>
+                <span className="sm:hidden">{isDeleting ? "..." : "Del"}</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleCancel} className="text-xs sm:text-sm shrink-0">
-                Cancelar
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {isCreateMode ? (
+              <>
+                <Button variant="outline" size="sm" onClick={handleCancel} className="text-xs sm:text-sm shrink-0">
+                  Cancelar
+                </Button>
+                <Button variant="default" size="sm" onClick={handleSave} disabled={isSaving} className="text-xs sm:text-sm shrink-0">
+                  <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                  <span className="hidden sm:inline">{isSaving ? "Criando..." : "Criar"}</span>
+                  <span className="sm:hidden">{isSaving ? "..." : "Criar"}</span>
+                </Button>
+              </>
+            ) : !isEditing ? (
+              <Button variant="outline" size="sm" onClick={handleEdit} className="text-xs sm:text-sm shrink-0">
+                <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                Editar
               </Button>
-            </>
-          ) : !isEditing ? (
-            <Button variant="outline" size="sm" onClick={handleEdit} className="text-xs sm:text-sm shrink-0">
-              <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-              Editar
-            </Button>
-          ) : (
-            <>
-              <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="text-xs sm:text-sm shrink-0">
-                <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
-                <span className="sm:hidden">{isSaving ? "..." : "Salvar"}</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleCancel} className="text-xs sm:text-sm shrink-0">
-                Cancelar
-              </Button>
-            </>
-          )}
-          {!isCreateMode && (
-            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting} className="text-xs sm:text-sm shrink-0">
-              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">{isDeleting ? "Deletando..." : "Deletar"}</span>
-              <span className="sm:hidden">{isDeleting ? "..." : "Del"}</span>
-            </Button>
-          )}
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={handleCancel} className="text-xs sm:text-sm shrink-0">
+                  Cancelar
+                </Button>
+                <Button variant="default" size="sm" onClick={handleSave} disabled={isSaving} className="text-xs sm:text-sm shrink-0">
+                  <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                  <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Salvar"}</span>
+                  <span className="sm:hidden">{isSaving ? "..." : "Salvar"}</span>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       )}
 

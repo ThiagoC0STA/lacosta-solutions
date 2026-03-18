@@ -15,6 +15,13 @@ export function formatPhoneBR(value: string): string {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
+/** Format Brazilian license plate: AAA-0000 (7 chars max, hyphen after 3). */
+export function formatPlate(value: string): string {
+  const cleaned = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 7);
+  if (cleaned.length <= 3) return cleaned;
+  return `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
+}
+
 /** Format CPF (11 digits) or CNPJ (14 digits) - mask changes based on length. */
 export function formatCPFCNPJ(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 14);

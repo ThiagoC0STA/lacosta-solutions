@@ -80,12 +80,12 @@ export default function DashboardPage() {
     return renewalsWithClients
       .filter((r) => r.status === "active")
       .filter((r) => {
-        const status = classifyDueStatus(r.dueDate);
+        const status = classifyDueStatus(r.dueDate, r.product);
         return status === "overdue" || status === "d7";
       })
       .sort((a, b) => {
-        const statusA = classifyDueStatus(a.dueDate);
-        const statusB = classifyDueStatus(b.dueDate);
+        const statusA = classifyDueStatus(a.dueDate, a.product);
+        const statusB = classifyDueStatus(b.dueDate, b.product);
         // Overdue first, then d7
         if (statusA === "overdue" && statusB !== "overdue") return -1;
         if (statusA !== "overdue" && statusB === "overdue") return 1;
@@ -141,7 +141,7 @@ export default function DashboardPage() {
       title: "Urgentes",
       value: stats.dueIn0to7,
       icon: Clock,
-      description: "Vencem em até 7 dias",
+      description: "Vencem em até 10 dias (40 para Frota)",
       filter: "d7" as const,
     },
     {
@@ -536,7 +536,7 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-6 max-h-[60vh] overflow-y-auto">
                 {urgentActions.map((action) => {
-                  const status = classifyDueStatus(action.dueDate);
+                  const status = classifyDueStatus(action.dueDate, action.product);
                   const isOverdue = status === "overdue";
                   
                   return (
@@ -691,6 +691,10 @@ export default function DashboardPage() {
           client={selectedBirthdayClient}
           policies={Array.isArray(policies) ? policies : []}
           products={Array.isArray(products) ? products : []}
+          onUpdateClient={async (id, data) => {
+            const updated = await updateClient({ id, data });
+            setSelectedBirthdayClient((prev) => (prev?.id === id ? { ...prev, ...updated } : prev));
+          }}
         />
 
         {/* Renewal Detail Modal - only mount when renewal is selected to avoid hooks order issues */}

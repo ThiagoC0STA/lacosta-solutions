@@ -24,12 +24,12 @@ import { supabase } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/renewals", label: "Renovações", icon: FileText },
-  { href: "/clients", label: "Clientes", icon: Users },
-  { href: "/products", label: "Produtos", icon: Package },
-  { href: "/insurers", label: "Seguradoras", icon: Building2 },
-  { href: "/calendar", label: "Calendário", icon: Calendar },
   { href: "/reports", label: "Relatórios", icon: BarChart3 },
+  { href: "/clients", label: "Clientes", icon: Users },
+  { href: "/renewals", label: "Renovações/Apólices", icon: FileText },
+  { href: "/calendar", label: "Calendário", icon: Calendar },
+  { href: "/insurers", label: "Seguradoras", icon: Building2 },
+  { href: "/products", label: "Produtos", icon: Package },
   { href: "/import", label: "Importar", icon: Upload },
   { href: "/settings", label: "Configurações", icon: Settings },
 ];

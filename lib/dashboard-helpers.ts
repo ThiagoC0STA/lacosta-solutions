@@ -22,17 +22,17 @@ export function computeDashboardStats(
   }).length;
 
   const dueIn0to7 = policies.filter((p) => {
-    const status = classifyDueStatus(p.dueDate);
+    const status = classifyDueStatus(p.dueDate, p.product);
     return status === "d7" && p.status === "active";
   }).length;
 
   const dueIn8to15 = policies.filter((p) => {
-    const status = classifyDueStatus(p.dueDate);
+    const status = classifyDueStatus(p.dueDate, p.product);
     return status === "d15" && p.status === "active";
   }).length;
 
   const dueIn16to30 = policies.filter((p) => {
-    const status = classifyDueStatus(p.dueDate);
+    const status = classifyDueStatus(p.dueDate, p.product);
     return status === "d30" && p.status === "active";
   }).length;
 

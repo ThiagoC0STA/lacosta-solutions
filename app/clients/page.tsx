@@ -778,7 +778,7 @@ function ClientsPageContent() {
                     return (
                       <div className="space-y-3">
                         {clientPolicies.map((policy: any) => {
-                          const status = classifyDueStatus(policy.dueDate);
+                          const status = classifyDueStatus(policy.dueDate, policy.product);
                           const statusColor = status === "overdue" 
                             ? "bg-red-950/40 border-red-900"
                             : status === "d7"
@@ -1044,6 +1044,10 @@ function ClientsPageContent() {
           client={selectedBirthdayClient}
           policies={Array.isArray(policies) ? policies : []}
           products={Array.isArray(products) ? products : []}
+          onUpdateClient={async (id, data) => {
+            const updated = await updateClient({ id, data });
+            setSelectedBirthdayClient((prev: any) => (prev?.id === id ? { ...prev, ...updated } : prev));
+          }}
         />
       </div>
     </AppLayout>

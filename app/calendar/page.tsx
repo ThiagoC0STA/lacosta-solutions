@@ -252,7 +252,7 @@ export default function CalendarPage() {
 
                 // Get colors for indicators
                 const urgentRenewals = renewals.filter((r) => {
-                  const status = classifyDueStatus(r.dueDate);
+                  const status = classifyDueStatus(r.dueDate, r.product);
                   return status === "overdue" || status === "d7";
                 });
                 const hasUrgentRenewal = urgentRenewals.length > 0;
@@ -364,7 +364,7 @@ export default function CalendarPage() {
                         })}
                         {/* Renewals */}
                         {renewals.slice(0, birthdays.length > 0 ? 2 : 3).map((renewal) => {
-                          const status = classifyDueStatus(renewal.dueDate);
+                          const status = classifyDueStatus(renewal.dueDate, renewal.product);
                           const statusKey = status === "overdue" ? "overdue" : status === "d7" ? "urgent" : "default";
                           const colors = getStatusColor(statusKey);
                           return (

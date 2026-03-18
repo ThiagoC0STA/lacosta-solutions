@@ -36,7 +36,7 @@ import {
 import { productDisplay, type Product } from "@/types";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { exportProductsToExcel } from "@/lib/export-helpers";
-import { extractProductCodeFromPolicy } from "@/lib/product-helpers";
+import { resolveProductCode } from "@/lib/product-helpers";
 
 type ProductWithStats = Product & { policyCount: number };
 
@@ -58,14 +58,15 @@ export default function ProductsPage() {
 
   const policyCountByCode = useMemo(() => {
     const map: Record<number, number> = {};
+    const productsList = products || [];
     for (const policy of policies) {
-      const code = extractProductCodeFromPolicy(policy.product);
+      const code = resolveProductCode(policy.product, productsList);
       if (code != null) {
         map[code] = (map[code] ?? 0) + 1;
       }
     }
     return map;
-  }, [policies]);
+  }, [policies, products]);
 
   const productsWithStats: ProductWithStats[] = useMemo(
     () =>

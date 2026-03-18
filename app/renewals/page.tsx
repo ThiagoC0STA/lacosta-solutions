@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, Filter, RefreshCw, Download, Plus, CheckSquare, Square, Trash2, Info, Calendar, X, FileText, User, Building2, Package, DollarSign, Save, Phone, Mail } from "lucide-react";
 import { exportPoliciesToExcel } from "@/lib/export-helpers";
-import { getProductDisplay } from "@/lib/product-helpers";
+import { getProductDisplay, extractProductCodeFromPolicy, resolveProductCode } from "@/lib/product-helpers";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { getStatusColor } from "@/lib/colors";
@@ -44,6 +44,8 @@ export default function RenewalsPage() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
+  const [insurerFilter, setInsurerFilter] = useState<string>("all");
+  const [productFilter, setProductFilter] = useState<string>("all");
   const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -70,6 +72,28 @@ export default function RenewalsPage() {
       };
     });
   }, [policies, clients]);
+
+  // Single list from renewals only; dedupe by resolved code, fallback by string for unknowns.
+  const productFilterOptions = useMemo(() => {
+    const seenByCode = new Set<number>();
+    const seenByStr = new Set<string>();
+    const result: string[] = [];
+    const productsList = products || [];
+    for (const r of renewalsWithClients) {
+      const prod = (r.product || "").trim();
+      if (!prod) continue;
+      const code = resolveProductCode(prod, productsList);
+      if (code !== null) {
+        if (seenByCode.has(code)) continue;
+        seenByCode.add(code);
+      } else {
+        if (seenByStr.has(prod)) continue;
+        seenByStr.add(prod);
+      }
+      result.push(prod);
+    }
+    return result.sort((a, b) => (getProductDisplay(a, productsList) || a).localeCompare(getProductDisplay(b, productsList) || b));
+  }, [renewalsWithClients, products]);
 
   const handleUpdateRenewal = useCallback(async (id: string, data: Partial<Omit<RenewalWithClient, "id" | "client">>) => {
     const updated = await updatePolicy({ id, data });
@@ -147,15 +171,31 @@ export default function RenewalsPage() {
     // Date range filter
     if (dateRangeFilter !== "all") {
       filtered = filtered.filter((r) => {
-        const status = classifyDueStatus(r.dueDate);
+        const status = classifyDueStatus(r.dueDate, r.product);
         return status === dateRangeFilter;
       });
     }
 
+    // Insurer filter
+    if (insurerFilter !== "all") {
+      filtered = filtered.filter((r) => (r.insurer || "").trim() === insurerFilter);
+    }
+
+    // Product filter: resolve by code so "7", "7 - Frota" and "Frota" all match Frota
+    if (productFilter !== "all") {
+      const productsList = products || [];
+      const selectedCode = resolveProductCode(productFilter, productsList);
+      if (selectedCode !== null) {
+        filtered = filtered.filter((r) => resolveProductCode(r.product, productsList) === selectedCode);
+      } else {
+        filtered = filtered.filter((r) => (r.product || "").trim() === productFilter);
+      }
+    }
+
     // Sort by importance: overdue first, then d7, then by date
     filtered.sort((a, b) => {
-      const statusA = classifyDueStatus(a.dueDate);
-      const statusB = classifyDueStatus(b.dueDate);
+      const statusA = classifyDueStatus(a.dueDate, a.product);
+      const statusB = classifyDueStatus(b.dueDate, b.product);
       
       // Priority order: overdue > d7 > others
       const priority = { overdue: 0, d7: 1, d15: 2, d30: 3, future: 4 };
@@ -170,7 +210,7 @@ export default function RenewalsPage() {
     });
 
     return filtered;
-  }, [renewalsWithClients, globalFilter, statusFilter, dateRangeFilter]);
+  }, [renewalsWithClients, globalFilter, statusFilter, dateRangeFilter, insurerFilter, productFilter, products]);
 
   const columns: ColumnDef<RenewalWithClient>[] = useMemo(
     () => [
@@ -300,29 +340,28 @@ export default function RenewalsPage() {
       },
       {
         accessorKey: "dueDate",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              className="h-8 p-0 hover:bg-transparent"
-            >
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>Vencimento</span>
-                {column.getIsSorted() === "asc" ? (
-                  <ArrowUp className="ml-1 h-3.5 w-3.5 text-muted-foreground" />
-                ) : column.getIsSorted() === "desc" ? (
-                  <ArrowDown className="ml-1 h-3.5 w-3.5 text-muted-foreground" />
-                ) : (
-                  <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-muted-foreground opacity-50" />
-                )}
-              </div>
-            </Button>
-          );
-        },
+        id: "dueDate",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-8 p-0 hover:bg-transparent"
+          >
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>Vencimento</span>
+              {column.getIsSorted() === "asc" ? (
+                <ArrowUp className="ml-1 h-3.5 w-3.5 text-muted-foreground" />
+              ) : column.getIsSorted() === "desc" ? (
+                <ArrowDown className="ml-1 h-3.5 w-3.5 text-muted-foreground" />
+              ) : (
+                <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-muted-foreground opacity-50" />
+              )}
+            </div>
+          </Button>
+        ),
         cell: ({ row }) => {
-          const status = classifyDueStatus(row.original.dueDate);
+          const status = classifyDueStatus(row.original.dueDate, row.original.product);
           const statusKey = status === "overdue" ? "overdue" : status === "d7" ? "urgent" : "default";
           const colors = getStatusColor(statusKey);
           
@@ -336,6 +375,13 @@ export default function RenewalsPage() {
           );
         },
         sortingFn: (rowA, rowB) => {
+          // First by status priority: overdue > d7 (urgent) > d15 > d30 > future
+          const statusA = classifyDueStatus(rowA.original.dueDate, rowA.original.product);
+          const statusB = classifyDueStatus(rowB.original.dueDate, rowB.original.product);
+          const priority: Record<string, number> = { overdue: 0, d7: 1, d15: 2, d30: 3, future: 4 };
+          const priorityDiff = (priority[statusA] ?? 5) - (priority[statusB] ?? 5);
+          if (priorityDiff !== 0) return priorityDiff;
+          // Then by date
           const dateA = typeof rowA.original.dueDate === "string"
             ? new Date(rowA.original.dueDate)
             : rowA.original.dueDate;
@@ -597,7 +643,7 @@ export default function RenewalsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold flex items-center gap-2">
                   <Search className="h-4 w-4" />
@@ -637,9 +683,45 @@ export default function RenewalsPage() {
                 >
                   <option value="all">Todos</option>
                   <option value="overdue">Vencidos</option>
-                  <option value="d7">0-7 dias</option>
-                  <option value="d15">8-15 dias</option>
-                  <option value="d30">16-30 dias</option>
+                  <option value="d7">Urgentes (0-10d, 40d Frota)</option>
+                  <option value="d15">Próximas</option>
+                  <option value="d30">Futuras</option>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Seguradora
+                </label>
+                <Select
+                  value={insurerFilter}
+                  onChange={(e) => setInsurerFilter(e.target.value)}
+                  className="shadow-sm"
+                >
+                  <option value="all">Todas</option>
+                  {[...new Set(renewalsWithClients.map((r) => r.insurer).filter(Boolean))].sort().map((ins) => (
+                    <option key={ins} value={ins}>
+                      {ins}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Produto
+                </label>
+                <Select
+                  value={productFilter}
+                  onChange={(e) => setProductFilter(e.target.value)}
+                  className="shadow-sm"
+                >
+                  <option value="all">Todos</option>
+                  {productFilterOptions.map((prod) => (
+                    <option key={prod} value={prod}>
+                      {getProductDisplay(prod, products)}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div className="space-y-2">
@@ -716,7 +798,7 @@ export default function RenewalsPage() {
                     </tr>
                   ) : (
                     table.getRowModel().rows.map((row) => {
-                      const status = classifyDueStatus(row.original.dueDate);
+                      const status = classifyDueStatus(row.original.dueDate, row.original.product);
                       // Map status to StatusColor
                       let statusKey: "overdue" | "urgent" | "d8to15" | "d16to30" | "birthday" | "default" = "default";
                       if (status === "overdue") statusKey = "overdue";

@@ -240,18 +240,34 @@ export function formatDateForStorage(date: Date | string): string {
   return toDateStringLocal(typeof date === "string" ? new Date(date) : date);
 }
 
-export function classifyDueStatus(dueDate: Date | string): DueStatus {
+/** Product code 7 = Frota, uses 40 days for urgent; others use 10 days. */
+const FROTA_PRODUCT_CODE = 7;
+const URGENT_DAYS_DEFAULT = 10;
+const URGENT_DAYS_FROTA = 40;
+
+function isFrotaProduct(product: string | undefined): boolean {
+  if (!product?.trim()) return false;
+  const part = product.includes(" - ") ? product.split(" - ")[0]?.trim() : product.trim();
+  const code = parseInt(part || "", 10);
+  return code === FROTA_PRODUCT_CODE;
+}
+
+export function classifyDueStatus(dueDate: Date | string, product?: string): DueStatus {
   const date = toLocalDate(dueDate);
   const today = startOfToday();
   const daysUntilDue = differenceInDays(date, today);
 
+  const urgentDays = isFrotaProduct(product) ? URGENT_DAYS_FROTA : URGENT_DAYS_DEFAULT;
+  const d15End = urgentDays + 10;
+  const d30End = urgentDays + 25;
+
   if (daysUntilDue < 0) {
     return "overdue";
-  } else if (daysUntilDue <= 7) {
+  } else if (daysUntilDue <= urgentDays) {
     return "d7";
-  } else if (daysUntilDue <= 15) {
+  } else if (daysUntilDue <= d15End) {
     return "d15";
-  } else if (daysUntilDue <= 30) {
+  } else if (daysUntilDue <= d30End) {
     return "d30";
   } else {
     return "future";

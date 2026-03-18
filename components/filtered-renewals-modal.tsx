@@ -45,7 +45,7 @@ export function FilteredRenewalsModal({
 
   const filteredRenewals = renewals.filter((r) => {
     if (r.status !== "active") return false;
-    const status = classifyDueStatus(r.dueDate);
+    const status = classifyDueStatus(r.dueDate, r.product);
     switch (filter) {
       case "overdue":
         return status === "overdue";
@@ -89,7 +89,7 @@ export function FilteredRenewalsModal({
         {filteredRenewals.length > 0 ? (
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             {filteredRenewals.map((renewal) => {
-              const status = classifyDueStatus(renewal.dueDate);
+              const status = classifyDueStatus(renewal.dueDate, renewal.product);
               const statusKey = status === "overdue" ? "overdue" : status === "d7" ? "urgent" : "default";
               const colors = getStatusColor(statusKey);
               return (
