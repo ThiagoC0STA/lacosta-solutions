@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, useEffect, Suspense } from "react";
+import { useMemo, useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
-import { useClients, usePolicies, useProducts } from "@/hooks/use-supabase-data";
+import { useClients, usePolicies, useProducts, useInsurers } from "@/hooks/use-supabase-data";
 import {
   useReactTable,
   getCoreRowModel,
@@ -28,11 +28,14 @@ import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/u
 import { cn } from "@/lib/utils";
 import { getStatusColor } from "@/lib/colors";
 import { BirthdayDetailModal } from "@/components/birthday-detail-modal";
+import { RenewalDetailModal } from "@/components/renewal-detail-modal";
+import type { RenewalWithClient } from "@/types";
 
 function ClientsPageContent() {
   const { clients, updateClient, deleteClient, createClient } = useClients();
-  const { policies } = usePolicies();
-  const { products } = useProducts();
+  const { policies, updatePolicy, deletePolicy } = usePolicies();
+  const { products, createProduct } = useProducts();
+  const { insurers, createInsurer } = useInsurers();
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "name", desc: false },
@@ -72,6 +75,7 @@ function ClientsPageContent() {
 
   const [selectedClient, setSelectedClient] = useState<typeof clientsWithStats[0] | null>(null);
   const [selectedBirthdayClient, setSelectedBirthdayClient] = useState<typeof clientsWithStats[0] | null>(null);
+  const [selectedRenewal, setSelectedRenewal] = useState<RenewalWithClient | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [editedClient, setEditedClient] = useState<Partial<typeof clientsWithStats[0]>>({});
@@ -99,6 +103,33 @@ function ClientsPageContent() {
 
     return filtered;
   }, [clientsWithStats, globalFilter, birthdayFilter]);
+
+  const handleUpdateRenewal = useCallback(async (id: string, data: Partial<Omit<RenewalWithClient, "id" | "client">>) => {
+    const updated = await updatePolicy({ id, data });
+    if (selectedRenewal && selectedRenewal.id === id) {
+      setSelectedRenewal({ ...selectedRenewal, ...updated, client: selectedRenewal.client });
+    }
+    return { ...updated, client: selectedRenewal?.client || { id: "", name: "" } } as RenewalWithClient;
+  }, [updatePolicy, selectedRenewal]);
+
+  const handleUpdateClient = useCallback(
+    async (clientId: string, data: Partial<{ name: string; phone?: string; email?: string; birthday?: Date | string }>) => {
+      await updateClient({ id: clientId, data });
+      if (selectedRenewal?.clientId === clientId) {
+        const client = clients.find((c: any) => c.id === clientId);
+        if (client) setSelectedRenewal({ ...selectedRenewal, client } as RenewalWithClient);
+      }
+    },
+    [updateClient, selectedRenewal, clients]
+  );
+
+  const handleSelectPolicy = useCallback((policyId: string) => {
+    const policy = (Array.isArray(policies) ? policies : []).find((p: any) => p.id === policyId);
+    const client = policy ? (Array.isArray(clients) ? clients : []).find((c: any) => c.id === policy.clientId) : null;
+    if (policy && client) {
+      setSelectedRenewal({ ...policy, client } as RenewalWithClient);
+    }
+  }, [policies, clients]);
 
   const columns: ColumnDef<typeof clientsWithStats[0]>[] = useMemo(
     () => [
@@ -754,7 +785,28 @@ function ClientsPageContent() {
                             ? "bg-amber-950/40 border-amber-900"
                             : "bg-gradient-to-br from-muted/60 to-muted/40 border-border/50";
                           return (
-                            <div key={policy.id} className={`relative border rounded-lg sm:rounded-xl p-3 sm:p-4 ${statusColor} transition-all hover:shadow-xl hover:-translate-y-1 overflow-hidden`}>
+                            <div
+                              key={policy.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                if (selectedClient) {
+                                  setSelectedRenewal({
+                                    ...policy,
+                                    client: {
+                                      id: selectedClient.id,
+                                      name: selectedClient.name,
+                                      phone: selectedClient.phone,
+                                      email: selectedClient.email,
+                                      birthday: selectedClient.birthday,
+                                    },
+                                  });
+                                  setSelectedClient(null);
+                                }
+                              }}
+                              onKeyDown={(e) => e.key === "Enter" && (document.activeElement as HTMLElement)?.click()}
+                              className={`relative border rounded-lg sm:rounded-xl p-3 sm:p-4 ${statusColor} transition-all hover:shadow-xl hover:-translate-y-1 overflow-hidden cursor-pointer`}
+                            >
                               {/* Hover accent */}
                               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 hover:opacity-100 transition-opacity" />
                               <div className="grid gap-3 md:grid-cols-3">
@@ -967,6 +1019,23 @@ function ClientsPageContent() {
             </div>
           )}
         </Dialog>
+
+        {/* Renewal Detail Modal - opens when clicking a policy in client info */}
+        {selectedRenewal && (
+          <RenewalDetailModal
+            renewal={selectedRenewal}
+            onClose={() => setSelectedRenewal(null)}
+            onUpdate={handleUpdateRenewal}
+            onDelete={deletePolicy}
+            onUpdateClient={handleUpdateClient}
+            allPolicies={Array.isArray(policies) ? policies : []}
+            onSelectPolicy={handleSelectPolicy}
+            products={Array.isArray(products) ? products : []}
+            onCreateProduct={(data) => createProduct(data as any)}
+            insurers={Array.isArray(insurers) ? insurers : []}
+            onCreateInsurer={(data) => createInsurer(data)}
+          />
+        )}
 
         {/* Birthday Detail Modal */}
         <BirthdayDetailModal
