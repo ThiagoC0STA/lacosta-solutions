@@ -70,23 +70,28 @@ export async function getInsurers(): Promise<Insurer[]> {
   return (data || []).map((row: any) => ({
     id: row.id,
     name: row.name,
+    logoUrl: row.logo_url ?? undefined,
   }));
 }
 
 export async function createInsurer(insurer: Omit<Insurer, "id">): Promise<Insurer> {
+  const insertData: Record<string, unknown> = { name: insurer.name.trim() };
+  if (insurer.logoUrl) insertData.logo_url = insurer.logoUrl;
+
   const { data, error } = await supabase
     .from("insurers")
-    .insert({ name: insurer.name.trim() })
+    .insert(insertData)
     .select()
     .single();
 
   if (error) throw error;
-  return { id: data.id, name: data.name };
+  return { id: data.id, name: data.name, logoUrl: data.logo_url ?? undefined };
 }
 
 export async function updateInsurer(id: string, insurer: Partial<Omit<Insurer, "id">>): Promise<Insurer> {
   const updateData: any = {};
   if (insurer.name !== undefined) updateData.name = insurer.name.trim();
+  if ("logoUrl" in insurer) updateData.logo_url = insurer.logoUrl ?? null;
 
   const { data, error } = await supabase
     .from("insurers")
@@ -96,7 +101,7 @@ export async function updateInsurer(id: string, insurer: Partial<Omit<Insurer, "
     .single();
 
   if (error) throw error;
-  return { id: data.id, name: data.name };
+  return { id: data.id, name: data.name, logoUrl: data.logo_url ?? undefined };
 }
 
 export async function deleteInsurer(id: string): Promise<void> {

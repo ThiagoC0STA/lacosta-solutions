@@ -47,5 +47,6 @@ export function productDisplay(p: Product): string {
 export interface Insurer {
   id: string;
   name: string;
+  logoUrl?: string;
 }
 

@@ -5,9 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Gift, Sparkles, FileText, Calendar as CalendarIcon, X } from "lucide-react";
 import { formatDate, classifyDueStatus, isBirthdayToday } from "@/lib/date-helpers";
+import { InsurerLogo } from "@/components/insurer-logo";
 import { getStatusColor } from "@/lib/colors";
+import { getProductDisplay } from "@/lib/product-helpers";
 import { cn } from "@/lib/utils";
-import type { RenewalWithClient } from "@/types";
+import type { Product, RenewalWithClient } from "@/types";
 import type { Client } from "@/types";
 
 interface DayEventsModalProps {
@@ -16,6 +18,8 @@ interface DayEventsModalProps {
   date: Date | null;
   renewals: RenewalWithClient[];
   birthdays: Client[];
+  products?: Product[];
+  insurers?: { id: string; name: string; logoUrl?: string }[];
   onRenewalClick: (renewal: RenewalWithClient) => void;
   onBirthdayClick: (client: Client, renewal?: RenewalWithClient) => void;
 }
@@ -26,6 +30,8 @@ export function DayEventsModal({
   date,
   renewals,
   birthdays,
+  products = [],
+  insurers = [],
   onRenewalClick,
   onBirthdayClick,
 }: DayEventsModalProps) {
@@ -133,29 +139,32 @@ export function DayEventsModal({
                         )}
                         onClick={() => onRenewalClick(renewal)}
                       >
-                        <div className="flex items-start justify-between gap-2 sm:gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm sm:text-base truncate">
+                        <div className="flex items-stretch justify-between gap-2 sm:gap-3 min-h-[100px]">
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <p className="font-semibold text-base sm:text-lg truncate">
                               {renewal.client.name}
                             </p>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                              {renewal.policyNumber && (
-                                <span className="text-xs text-muted-foreground">
-                                  Apólice: {renewal.policyNumber}
-                                </span>
-                              )}
-                              {renewal.insurer && (
-                                <span className="text-xs text-muted-foreground">
-                                  {renewal.insurer}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                            {renewal.policyNumber && (
+                              <p className="text-sm text-muted-foreground">
+                                CPF/CNPJ: {renewal.policyNumber}
+                              </p>
+                            )}
+                            <p className="text-sm text-muted-foreground">
                               Vence em: {formatDate(renewal.dueDate)}
                             </p>
+                            {renewal.insurer && (
+                              <InsurerLogo insurerName={renewal.insurer} insurers={insurers} width={88} height={44} className="shrink-0" />
+                            )}
                           </div>
-                          <div className={cn("px-2 py-1 rounded text-xs font-medium shrink-0", colors.iconBg, colors.iconColor)}>
-                            {status === "overdue" ? "Vencido" : status === "d7" ? "Urgente" : "Normal"}
+                          <div className="flex flex-col justify-between items-end shrink-0">
+                            <div className={cn("px-2.5 py-1 rounded-md text-xs font-medium", colors.iconBg, colors.iconColor)}>
+                              {status === "overdue" ? "Vencido" : status === "d7" ? "Urgente" : "Normal"}
+                            </div>
+                            {renewal.product && (
+                              <span className="inline-flex px-3 py-1.5 text-sm font-medium bg-slate-500/20 text-slate-200 rounded-lg border border-slate-500/40">
+                                {getProductDisplay(renewal.product, products)}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </Card>

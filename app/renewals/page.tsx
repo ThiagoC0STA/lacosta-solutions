@@ -510,10 +510,10 @@ export default function RenewalsPage() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
-                  Apólices
+                  Renovações
                 </h1>
                 <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mt-1">
-                  Gerencie todas as apólices
+                  Gerencie todas as renovações
                 </p>
               </div>
             </div>

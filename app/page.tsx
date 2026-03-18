@@ -25,6 +25,7 @@ import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/u
 import { cn } from "@/lib/utils";
 import { RenewalDetailModal } from "@/components/renewal-detail-modal";
 import { FilteredRenewalsModal } from "@/components/filtered-renewals-modal";
+import { InsurerLogo } from "@/components/insurer-logo";
 import { BirthdaysModal } from "@/components/birthdays-modal";
 import { BirthdayDetailModal } from "@/components/birthday-detail-modal";
 
@@ -557,7 +558,7 @@ export default function DashboardPage() {
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                           <div className="flex-1 min-w-0">
                             {/* Header */}
-                            <div className="flex items-start gap-3 mb-3">
+                            <div className="flex items-start gap-3 mb-4">
                               <div className={cn(
                                 "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
                                 isOverdue
@@ -569,71 +570,53 @@ export default function DashboardPage() {
                                   isOverdue ? "text-red-400" : "text-amber-400"
                                 )} />
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                  <h3 className="font-bold text-base sm:text-lg text-foreground truncate">
+                              <div className="flex-1 min-w-0 space-y-3">
+                                <div className="flex items-start justify-between gap-2">
+                                  <h3 className="font-bold text-lg sm:text-xl text-foreground truncate">
                                     {action.client.name}
                                   </h3>
-                                  {isOverdue && (
-                                    <span className="px-2 py-0.5 text-xs font-bold bg-red-600 text-white rounded-md shadow-sm shrink-0">
-                                      VENCIDO
-                                    </span>
-                                  )}
-                                  {!isOverdue && (
-                                    <span className="px-2 py-0.5 text-xs font-bold bg-amber-600 text-white rounded-md shadow-sm shrink-0">
-                                      URGENTE
-                                    </span>
-                                  )}
+                                  <div className="flex flex-col gap-2 items-end shrink-0">
+                                    {isOverdue && (
+                                      <span className="px-2 py-0.5 text-xs font-bold bg-red-600 text-white rounded-md shadow-sm">
+                                        VENCIDO
+                                      </span>
+                                    )}
+                                    {!isOverdue && (
+                                      <span className="px-2 py-0.5 text-xs font-bold bg-amber-600 text-white rounded-md shadow-sm">
+                                        URGENTE
+                                      </span>
+                                    )}
+                                    {action.product && (
+                                      <span className="inline-flex px-3 py-1.5 text-sm font-medium bg-slate-500/20 text-slate-200 rounded-lg border border-slate-500/40">
+                                        {getProductDisplay(action.product, products)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
-                                {action.product && (
-                                  <p className="text-xs sm:text-sm text-muted-foreground">
-                                    {getProductDisplay(action.product, products)}
+                                {action.policyNumber && (
+                                  <p className="text-sm text-muted-foreground">
+                                    CPF/CNPJ: {action.policyNumber}
                                   </p>
                                 )}
-                              </div>
-                            </div>
-
-                            {/* Details Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 ml-0 sm:ml-[52px]">
-                              {action.policyNumber && (
-                                <div className="flex items-start gap-2">
-                                  <FileText className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                                  <div className="min-w-0">
-                                    <p className="text-xs text-muted-foreground">Apólice</p>
-                                    <p className="text-sm font-semibold text-foreground break-words">{action.policyNumber}</p>
-                                  </div>
-                                </div>
-                              )}
-                              {action.insurer && (
-                                <div className="flex items-start gap-2">
-                                  <Building2 className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                                  <div className="min-w-0">
-                                    <p className="text-xs text-muted-foreground">Seguradora</p>
-                                    <p className="text-sm font-semibold text-foreground break-words">{action.insurer}</p>
-                                  </div>
-                                </div>
-                              )}
-                              <div className="flex items-start gap-2">
-                                <Calendar className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="text-xs text-muted-foreground">Vencimento</p>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                                   <p className={cn(
-                                    "text-sm font-bold",
+                                    "text-base font-bold",
                                     isOverdue ? "text-red-400" : "text-amber-400"
                                   )}>
-                                    {formatDate(action.dueDate)}
+                                    Vence em: {formatDate(action.dueDate)}
                                   </p>
                                 </div>
-                              </div>
-                              {action.client.phone && (
-                                <div className="flex items-start gap-2">
-                                  <Phone className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                                  <div className="min-w-0">
-                                    <p className="text-xs text-muted-foreground">Telefone</p>
-                                    <p className="text-sm font-semibold text-foreground break-words">{action.client.phone}</p>
+                                {action.insurer && (
+                                  <InsurerLogo insurerName={action.insurer} insurers={Array.isArray(insurers) ? insurers : []} width={80} height={40} className="shrink-0" />
+                                )}
+                                {action.client.phone && (
+                                  <div className="flex items-center gap-2">
+                                    <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    <p className="text-base font-medium text-foreground">{action.client.phone}</p>
                                   </div>
-                                </div>
-                              )}
+                                )}
+                              </div>
                             </div>
                           </div>
 
@@ -683,6 +666,8 @@ export default function DashboardPage() {
           onClose={() => setFilteredRenewalsModal({ open: false, filter: null })}
           filter={filteredRenewalsModal.filter}
           renewals={renewalsWithClients}
+          products={products}
+          insurers={Array.isArray(insurers) ? insurers : []}
           onRenewalClick={(renewal) => {
             setSelectedRenewal(renewal);
           }}

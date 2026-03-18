@@ -21,6 +21,7 @@ import {
   updateProduct,
 } from "@/lib/supabase/queries";
 import {
+  createBackup,
   deleteBackup,
   getBackups,
   restoreFromBackup,
@@ -299,12 +300,21 @@ export function useBackups() {
     },
   });
 
+  const createMutation = useMutation<Backup, Error, { clients: Client[]; policies: Policy[] }>({
+    mutationFn: ({ clients, policies }) => createBackup(clients, policies),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["backups"] });
+    },
+  });
+
   return {
     backups,
     isLoading,
     error,
+    createBackup: createMutation.mutateAsync,
     restoreBackup: restoreMutation.mutateAsync,
     deleteBackup: deleteMutation.mutateAsync,
+    isCreating: createMutation.isPending,
     isRestoring: restoreMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };

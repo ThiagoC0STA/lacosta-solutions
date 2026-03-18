@@ -788,7 +788,7 @@ export function RenewalDetailModal({
                       <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
                         {policy.policyNumber && (
                           <p>
-                            <span className="font-medium">Apólice:</span> {policy.policyNumber}
+                            <span className="font-medium">CPF/CNPJ:</span> {policy.policyNumber}
                           </p>
                         )}
                         <p>

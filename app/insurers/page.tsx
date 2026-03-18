@@ -33,11 +33,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Upload,
+  ImageIcon,
 } from "lucide-react";
 import type { Insurer } from "@/types";
 import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 import { exportInsurersToExcel } from "@/lib/export-helpers";
 import { insurerMatchesPolicy } from "@/lib/insurer-helpers";
+import { uploadInsurerLogo } from "@/lib/supabase/storage";
+import { InsurerLogo } from "@/components/insurer-logo";
 
 type InsurerWithStats = Insurer & { policyCount: number };
 
@@ -49,6 +53,9 @@ export default function InsurersPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [editedName, setEditedName] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [removeLogo, setRemoveLogo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
@@ -157,6 +164,15 @@ export default function InsurersPage() {
   const columns: ColumnDef<InsurerWithStats>[] = useMemo(
     () => [
       {
+        id: "logo",
+        header: () => <span className="text-left">Logo</span>,
+        cell: ({ row }) => (
+          <div className="flex items-center justify-start">
+            <InsurerLogo insurerName={row.original.name} insurers={insurers} width={64} height={32} className="shrink-0" />
+          </div>
+        ),
+      },
+      {
         accessorKey: "name",
         header: ({ column }) => (
           <Button
@@ -213,6 +229,7 @@ export default function InsurersPage() {
                 setIsEditing(true);
                 setEditedName(row.original.name);
                 setIsCreating(false);
+                setRemoveLogo(false);
               }}
             >
               <Edit2 className="h-4 w-4 mr-1" />
@@ -279,13 +296,26 @@ export default function InsurersPage() {
           id: selectedInsurer.id,
           data: { name: editedName.trim() },
         });
+        if (removeLogo) {
+          await updateInsurer({ id: selectedInsurer.id, data: { logoUrl: null as unknown as string } });
+        } else if (logoFile) {
+          const url = await uploadInsurerLogo(selectedInsurer.id, logoFile);
+          await updateInsurer({ id: selectedInsurer.id, data: { logoUrl: url } });
+        }
         setIsEditing(false);
         setSelectedInsurer(null);
       } else if (isCreating) {
-        await createInsurer({ name: editedName.trim() });
+        const created = await createInsurer({ name: editedName.trim() });
+        if (logoFile) {
+          const url = await uploadInsurerLogo(created.id, logoFile);
+          await updateInsurer({ id: created.id, data: { logoUrl: url } });
+        }
         setIsCreating(false);
       }
       setEditedName("");
+      setLogoFile(null);
+      setLogoPreview(null);
+      setRemoveLogo(false);
     } catch (error) {
       alert(`Erro ao salvar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
     } finally {
@@ -298,6 +328,7 @@ export default function InsurersPage() {
     setIsCreating(true);
     setIsEditing(true);
     setEditedName("");
+    setRemoveLogo(false);
   };
 
   const handleCancel = () => {
@@ -305,6 +336,29 @@ export default function InsurersPage() {
     setIsCreating(false);
     setIsEditing(false);
     setEditedName("");
+    setLogoFile(null);
+    setLogoPreview(null);
+    setRemoveLogo(false);
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setLogoFile(file);
+      setRemoveLogo(false);
+      const reader = new FileReader();
+      reader.onload = () => setLogoPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else if (file) {
+      alert("Selecione uma imagem (PNG, JPG, WEBP, etc.)");
+    }
+    e.target.value = "";
+  };
+
+  const clearLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    setRemoveLogo(true);
   };
 
   const handleExport = () => {
@@ -426,7 +480,7 @@ export default function InsurersPage() {
                       {headerGroup.headers.map((header) => (
                         <th
                           key={header.id}
-                          className="h-12 sm:h-14 px-3 sm:px-4 lg:px-6 text-left align-middle font-bold text-xs text-muted-foreground uppercase tracking-wider"
+                          className="h-14 sm:h-16 px-3 sm:px-4 lg:px-6 text-left align-middle font-bold text-xs text-muted-foreground uppercase tracking-wider"
                         >
                           {header.isPlaceholder
                             ? null
@@ -467,7 +521,7 @@ export default function InsurersPage() {
                         {row.getVisibleCells().map((cell) => (
                           <td
                             key={cell.id}
-                            className="px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3"
+                            className="px-4 sm:px-6 lg:px-8 py-6 sm:py-7"
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
@@ -525,13 +579,57 @@ export default function InsurersPage() {
             </div>
           </DialogHeader>
           <DialogContent>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold">Nome *</label>
-              <Input
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                placeholder="Ex: Porto Seguro"
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Nome *</label>
+                <Input
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  placeholder="Ex: Porto Seguro"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Logo</label>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    {(logoPreview || (selectedInsurer?.logoUrl && !logoFile && !removeLogo)) && (
+                      <div className="relative">
+                        <img
+                          src={logoPreview || selectedInsurer?.logoUrl || ""}
+                          alt="Logo"
+                          className="h-12 w-20 rounded-lg object-contain bg-muted/50 border"
+                        />
+                        <button
+                          type="button"
+                          onClick={clearLogo}
+                          className="absolute -top-1 -right-1 rounded-full bg-destructive text-destructive-foreground p-1 hover:opacity-90"
+                          aria-label="Remover logo"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                    <label className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border-2 border-dashed border-muted-foreground/30 px-4 py-3 hover:bg-muted/50 transition-colors">
+                      <Upload className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {logoFile ? logoFile.name : "Fazer upload"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoChange}
+                      />
+                    </label>
+                  </div>
+                  {!logoPreview && !selectedInsurer?.logoUrl && (
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG ou WEBP. Máx. 2MB.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </DialogContent>
           <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-border/50 bg-muted/5 flex items-center justify-end gap-2 flex-wrap shrink-0 mt-auto">

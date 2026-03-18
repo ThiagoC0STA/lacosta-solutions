@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node scripts/test-insurance-calculations.js && node scripts/validate-reports.js",
-    "validate": "node scripts/validate-excel.js"
+    "validate": "node scripts/validate-excel.js",
+    "analyze-excel": "node scripts/analyze-excel.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

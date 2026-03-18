@@ -470,6 +470,8 @@ export default function CalendarPage() {
               date={selectedDay}
               renewals={dayRenewals}
               birthdays={dayBirthdays}
+              products={products}
+              insurers={Array.isArray(insurers) ? insurers : []}
               onRenewalClick={(renewal) => {
                 setSelectedDay(null);
                 setSelectedRenewal(renewal);

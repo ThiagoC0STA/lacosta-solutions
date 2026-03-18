@@ -1,0 +1,918 @@
+{
+  "sheets": [
+    {
+      "name": "CLIENTES A RENOVAR",
+      "rows": 474,
+      "cols": 20,
+      "headerRow": 0,
+      "headers": [
+        {
+          "index": 0,
+          "name": "NOME",
+          "letter": "A"
+        },
+        {
+          "index": 1,
+          "name": "TELEFONE CASA",
+          "letter": "B"
+        },
+        {
+          "index": 2,
+          "name": "TELEFONE COMERCIAL",
+          "letter": "C"
+        },
+        {
+          "index": 3,
+          "name": "TELEFONE CELULAR",
+          "letter": "D"
+        },
+        {
+          "index": 4,
+          "name": "DATA DE NASCIMENTO",
+          "letter": "E"
+        },
+        {
+          "index": 5,
+          "name": "EMAIL",
+          "letter": "F"
+        },
+        {
+          "index": 6,
+          "name": "SEGURADORA",
+          "letter": "G"
+        },
+        {
+          "index": 7,
+          "name": "PRODUTO",
+          "letter": "H"
+        },
+        {
+          "index": 8,
+          "name": "VENCIMENTO APÓLICE",
+          "letter": "I"
+        },
+        {
+          "index": 9,
+          "name": "CPF/ CNPJ",
+          "letter": "J"
+        },
+        {
+          "index": 10,
+          "name": "PLACA",
+          "letter": "K"
+        },
+        {
+          "index": 11,
+          "name": "PREMIO TOTAL",
+          "letter": "L"
+        },
+        {
+          "index": 12,
+          "name": "IOF",
+          "letter": "M"
+        },
+        {
+          "index": 13,
+          "name": "PREMIO LIQUIDO",
+          "letter": "N"
+        },
+        {
+          "index": 14,
+          "name": "COMISSÃO",
+          "letter": "O"
+        },
+        {
+          "index": 15,
+          "name": "0.0738",
+          "letter": "P"
+        },
+        {
+          "index": 16,
+          "name": "TOTAL COMISSÃO ANUAL",
+          "letter": "Q"
+        },
+        {
+          "index": 17,
+          "name": "161615.4302477184",
+          "letter": "R"
+        },
+        {
+          "index": 18,
+          "name": "MEDIA COMISSÃO MENSAL",
+          "letter": "S"
+        },
+        {
+          "index": 19,
+          "name": "13467.9525206432",
+          "letter": "T"
+        }
+      ],
+      "columnAnalysis": [],
+      "cpfCnpjColumn": 9,
+      "dueDateColumn": 8,
+      "cpfCnpjSamples": [
+        {
+          "row": 2,
+          "ref": "J2",
+          "rawType": "s",
+          "rawValue": "058.471.269-30",
+          "jsonValue": "058.471.269-30",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 3,
+          "ref": "J3",
+          "rawType": "s",
+          "rawValue": "48.010.825/0001-13",
+          "jsonValue": "48.010.825/0001-13",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 4,
+          "ref": "J4",
+          "rawType": "s",
+          "rawValue": "06.203.067/0001-00",
+          "jsonValue": "06.203.067/0001-00",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 5,
+          "ref": "J5",
+          "rawType": "s",
+          "rawValue": "041.993.259-30",
+          "jsonValue": "041.993.259-30",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 6,
+          "ref": "J6",
+          "rawType": "s",
+          "rawValue": "73.964.769/0001-01",
+          "jsonValue": "73.964.769/0001-01",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 7,
+          "ref": "J7",
+          "rawType": "s",
+          "rawValue": "260.203.197-68",
+          "jsonValue": "260.203.197-68",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 8,
+          "ref": "J8",
+          "rawType": "s",
+          "rawValue": "260.203.197-68",
+          "jsonValue": "260.203.197-68",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 9,
+          "ref": "J9",
+          "rawType": "s",
+          "rawValue": "54.003.643/0001-18",
+          "jsonValue": "54.003.643/0001-18",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 10,
+          "ref": "J10",
+          "rawType": "s",
+          "rawValue": "522.281.779-20",
+          "jsonValue": "522.281.779-20",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 11,
+          "ref": "J11",
+          "rawType": "s",
+          "rawValue": "03.676.149/0001-83",
+          "jsonValue": "03.676.149/0001-83",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 12,
+          "ref": "J12",
+          "rawType": "s",
+          "rawValue": "030.924.899-00",
+          "jsonValue": "030.924.899-00",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 13,
+          "ref": "J13",
+          "rawType": "s",
+          "rawValue": "122.161.991-84",
+          "jsonValue": "122.161.991-84",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 14,
+          "ref": "J14",
+          "rawType": "s",
+          "rawValue": "808.339.699-00",
+          "jsonValue": "808.339.699-00",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 15,
+          "ref": "J15",
+          "rawType": "s",
+          "rawValue": "942.264.310-49",
+          "jsonValue": "942.264.310-49",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 16,
+          "ref": "J16",
+          "rawType": "s",
+          "rawValue": "477.867.369-72",
+          "jsonValue": "477.867.369-72",
+          "jsonType": "string",
+          "isDate": false
+        }
+      ],
+      "sampleRows": [
+        {
+          "NOME": {
+            "value": "Alexandre Moreira Vieira (esposo Ariane ind. Eva)",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CASA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE COMERCIAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CELULAR": {
+            "value": "41 991422805",
+            "type": "string",
+            "isDate": false
+          },
+          "DATA DE NASCIMENTO": {
+            "value": "1985-12-07T02:00:28.000Z",
+            "type": "object",
+            "isDate": true
+          },
+          "EMAIL": {
+            "value": "alexmvieiraspfc@gmail.com",
+            "type": "string",
+            "isDate": false
+          },
+          "SEGURADORA": {
+            "value": "YELUM",
+            "type": "string",
+            "isDate": false
+          },
+          "PRODUTO": {
+            "value": 0,
+            "type": "number",
+            "isDate": false
+          },
+          "VENCIMENTO APÓLICE": {
+            "value": "2026-03-22T03:00:28.000Z",
+            "type": "object",
+            "isDate": true
+          },
+          "CPF/ CNPJ": {
+            "value": "058.471.269-30",
+            "type": "string",
+            "isDate": false
+          },
+          "PLACA": {
+            "value": "RTM6D07",
+            "type": "string",
+            "isDate": false
+          },
+          "PREMIO TOTAL": {
+            "value": 2055.93,
+            "type": "number",
+            "isDate": false
+          },
+          "IOF": {
+            "value": 141.29971503073196,
+            "type": "number",
+            "isDate": false
+          },
+          "PREMIO LIQUIDO": {
+            "value": 1914.6302849692677,
+            "type": "number",
+            "isDate": false
+          },
+          "COMISSÃO": {
+            "value": 287.19454274539015,
+            "type": "number",
+            "isDate": false
+          },
+          "0.0738": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TOTAL COMISSÃO ANUAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "161615.4302477184": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "MEDIA COMISSÃO MENSAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "13467.9525206432": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          }
+        },
+        {
+          "NOME": {
+            "value": "R H Corretagem De Imoveis Ltda (Acram e bruno empresarial)",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CASA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE COMERCIAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CELULAR": {
+            "value": "48 988210046",
+            "type": "string",
+            "isDate": false
+          },
+          "DATA DE NASCIMENTO": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "EMAIL": {
+            "value": "dreamonii@remax.com.br",
+            "type": "string",
+            "isDate": false
+          },
+          "SEGURADORA": {
+            "value": "ALLIANZ ",
+            "type": "string",
+            "isDate": false
+          },
+          "PRODUTO": {
+            "value": 3,
+            "type": "number",
+            "isDate": false
+          },
+          "VENCIMENTO APÓLICE": {
+            "value": "2026-03-24T03:00:28.000Z",
+            "type": "object",
+            "isDate": true
+          },
+          "CPF/ CNPJ": {
+            "value": "48.010.825/0001-13",
+            "type": "string",
+            "isDate": false
+          },
+          "PLACA": {
+            "value": "EMPRESARIAL",
+            "type": "string",
+            "isDate": false
+          },
+          "PREMIO TOTAL": {
+            "value": 1248.13,
+            "type": "number",
+            "isDate": false
+          },
+          "IOF": {
+            "value": 85.78133171912833,
+            "type": "number",
+            "isDate": false
+          },
+          "PREMIO LIQUIDO": {
+            "value": 1162.3486682808716,
+            "type": "number",
+            "isDate": false
+          },
+          "COMISSÃO": {
+            "value": 174.35230024213072,
+            "type": "number",
+            "isDate": false
+          },
+          "0.0738": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TOTAL COMISSÃO ANUAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "161615.4302477184": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "MEDIA COMISSÃO MENSAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "13467.9525206432": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          }
+        },
+        {
+          "NOME": {
+            "value": "Marcelo Fossatti Representações De Auto peças",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CASA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE COMERCIAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CELULAR": {
+            "value": "41 9 99432238",
+            "type": "string",
+            "isDate": false
+          },
+          "DATA DE NASCIMENTO": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "EMAIL": {
+            "value": "mfrepr@gmail.com",
+            "type": "string",
+            "isDate": false
+          },
+          "SEGURADORA": {
+            "value": "EZZE",
+            "type": "string",
+            "isDate": false
+          },
+          "PRODUTO": {
+            "value": 0,
+            "type": "number",
+            "isDate": false
+          },
+          "VENCIMENTO APÓLICE": {
+            "value": "2026-03-25T03:00:28.000Z",
+            "type": "object",
+            "isDate": true
+          },
+          "CPF/ CNPJ": {
+            "value": "06.203.067/0001-00",
+            "type": "string",
+            "isDate": false
+          },
+          "PLACA": {
+            "value": "FLZ1I34",
+            "type": "string",
+            "isDate": false
+          },
+          "PREMIO TOTAL": {
+            "value": 3883.02,
+            "type": "number",
+            "isDate": false
+          },
+          "IOF": {
+            "value": 266.87174147886014,
+            "type": "number",
+            "isDate": false
+          },
+          "PREMIO LIQUIDO": {
+            "value": 3616.1482585211397,
+            "type": "number",
+            "isDate": false
+          },
+          "COMISSÃO": {
+            "value": 361.614825852114,
+            "type": "number",
+            "isDate": false
+          },
+          "0.0738": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TOTAL COMISSÃO ANUAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "161615.4302477184": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "MEDIA COMISSÃO MENSAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "13467.9525206432": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "CADASTRO",
+      "rows": 9,
+      "cols": 13,
+      "headerRow": 0,
+      "headers": [
+        {
+          "index": 0,
+          "name": "NOME",
+          "letter": "A"
+        },
+        {
+          "index": 1,
+          "name": "TELEFONE CASA",
+          "letter": "B"
+        },
+        {
+          "index": 2,
+          "name": "TELEFONE COMERCIAL",
+          "letter": "C"
+        },
+        {
+          "index": 3,
+          "name": "TELEFONE CELULAR",
+          "letter": "D"
+        },
+        {
+          "index": 4,
+          "name": "DATA DE NASCIMENTO",
+          "letter": "E"
+        },
+        {
+          "index": 5,
+          "name": "EMAIL",
+          "letter": "F"
+        },
+        {
+          "index": 6,
+          "name": "SEGURADORA",
+          "letter": "G"
+        },
+        {
+          "index": 7,
+          "name": "PRODUTO",
+          "letter": "H"
+        },
+        {
+          "index": 8,
+          "name": "VENCIMENTO APÓLICE",
+          "letter": "I"
+        },
+        {
+          "index": 9,
+          "name": "CPF/ CNPJ",
+          "letter": "J"
+        },
+        {
+          "index": 10,
+          "name": "PLACA",
+          "letter": "K"
+        },
+        {
+          "index": 11,
+          "name": "PREMIO TOTAL",
+          "letter": "L"
+        },
+        {
+          "index": 12,
+          "name": "COMISSÃO",
+          "letter": "M"
+        }
+      ],
+      "columnAnalysis": [],
+      "cpfCnpjColumn": 9,
+      "dueDateColumn": 8,
+      "cpfCnpjSamples": [
+        {
+          "row": 2,
+          "ref": "J2",
+          "rawType": "n",
+          "rawValue": 4513514957,
+          "jsonValue": 4513514957,
+          "jsonType": "number",
+          "isDate": false
+        },
+        {
+          "row": 3,
+          "ref": "J3",
+          "rawType": "unknown",
+          "jsonValue": "",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 4,
+          "ref": "J4",
+          "rawType": "unknown",
+          "jsonValue": "",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 5,
+          "ref": "J5",
+          "rawType": "unknown",
+          "jsonValue": "",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 6,
+          "ref": "J6",
+          "rawType": "unknown",
+          "jsonValue": "",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 7,
+          "ref": "J7",
+          "rawType": "unknown",
+          "jsonValue": "",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 8,
+          "ref": "J8",
+          "rawType": "unknown",
+          "jsonValue": "",
+          "jsonType": "string",
+          "isDate": false
+        },
+        {
+          "row": 9,
+          "ref": "J9",
+          "rawType": "unknown",
+          "jsonValue": "",
+          "jsonType": "string",
+          "isDate": false
+        }
+      ],
+      "sampleRows": [
+        {
+          "NOME": {
+            "value": "Isabele Crisostomo",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CASA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE COMERCIAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CELULAR": {
+            "value": "41 996702588",
+            "type": "string",
+            "isDate": false
+          },
+          "DATA DE NASCIMENTO": {
+            "value": "1990-12-28T02:00:28.000Z",
+            "type": "object",
+            "isDate": true
+          },
+          "EMAIL": {
+            "value": "isabele8p@gmail.com",
+            "type": "string",
+            "isDate": false
+          },
+          "SEGURADORA": {
+            "value": "Mapfre",
+            "type": "string",
+            "isDate": false
+          },
+          "PRODUTO": {
+            "value": "Automóvel",
+            "type": "string",
+            "isDate": false
+          },
+          "VENCIMENTO APÓLICE": {
+            "value": "2027-03-13T03:00:28.000Z",
+            "type": "object",
+            "isDate": true
+          },
+          "CPF/ CNPJ": {
+            "value": 4513514957,
+            "type": "number",
+            "isDate": false
+          },
+          "PLACA": {
+            "value": "AYC1942",
+            "type": "string",
+            "isDate": false
+          },
+          "PREMIO TOTAL": {
+            "value": 3130.78,
+            "type": "number",
+            "isDate": false
+          },
+          "COMISSÃO": {
+            "value": 10,
+            "type": "number",
+            "isDate": false
+          }
+        },
+        {
+          "NOME": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CASA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE COMERCIAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CELULAR": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "DATA DE NASCIMENTO": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "EMAIL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "SEGURADORA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "PRODUTO": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "VENCIMENTO APÓLICE": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "CPF/ CNPJ": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "PLACA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "PREMIO TOTAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "COMISSÃO": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          }
+        },
+        {
+          "NOME": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CASA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE COMERCIAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "TELEFONE CELULAR": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "DATA DE NASCIMENTO": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "EMAIL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "SEGURADORA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "PRODUTO": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "VENCIMENTO APÓLICE": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "CPF/ CNPJ": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "PLACA": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "PREMIO TOTAL": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          },
+          "COMISSÃO": {
+            "value": "",
+            "type": "string",
+            "isDate": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Código Produtos",
+      "rows": 10,
+      "cols": 2,
+      "headerRow": 0,
+      "headers": [],
+      "columnAnalysis": [],
+      "cpfCnpjColumn": null,
+      "dueDateColumn": null
+    }
+  ],
+  "issues": [],
+  "recommendations": []
+}

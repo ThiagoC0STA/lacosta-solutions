@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useClients, usePolicies, useBackups } from "@/hooks/use-supabase-data";
-import { Database, Download, FileSpreadsheet } from "lucide-react";
+import { Database, Download, FileSpreadsheet, Archive } from "lucide-react";
 import { exportClientsToExcel, exportPoliciesToExcel, exportDashboardToExcel } from "@/lib/export-helpers";
 import { computeDashboardStats } from "@/lib/dashboard-helpers";
 import { DangerZoneCard } from "@/components/settings/danger-zone-card";
@@ -18,8 +18,10 @@ export default function SettingsPage() {
   const { policies } = usePolicies();
   const {
     backups,
+    createBackup,
     restoreBackup,
     deleteBackup,
+    isCreating,
     isRestoring,
     isDeleting,
   } = useBackups();
@@ -45,6 +47,15 @@ export default function SettingsPage() {
       showAlert("Sucesso", "Dados restaurados com sucesso!", "success");
     } catch (error) {
       showAlert("Erro", `Erro ao restaurar: ${error instanceof Error ? error.message : "Erro desconhecido"}`, "error");
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    try {
+      await createBackup({ clients, policies });
+      showAlert("Sucesso", "Backup criado com sucesso!", "success");
+    } catch (error) {
+      showAlert("Erro", `Erro ao criar backup: ${error instanceof Error ? error.message : "Erro desconhecido"}`, "error");
     }
   };
 
@@ -98,6 +109,28 @@ export default function SettingsPage() {
                 <p className="text-xl sm:text-2xl font-semibold">{policies.length}</p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Create backup */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Archive className="h-5 w-5" />
+              Fazer Backup
+            </CardTitle>
+            <CardDescription>
+              Crie um backup manual dos dados atuais. O backup ficará salvo e poderá ser restaurado depois.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleCreateBackup}
+              disabled={isCreating || clients.length === 0}
+            >
+              <Archive className="h-4 w-4 mr-2" />
+              {isCreating ? "Criando..." : "Fazer Backup Agora"}
+            </Button>
           </CardContent>
         </Card>
 
