@@ -5,6 +5,7 @@ import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/u
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import {
   FileText,
@@ -35,7 +36,7 @@ import type { Client, Product, Insurer, RenewalWithClient } from "@/types";
 import { productDisplay } from "@/types";
 import { getProductDisplay } from "@/lib/product-helpers";
 import { getInsurerDisplay, insurerMatchesPolicy } from "@/lib/insurer-helpers";
-import { formatDate } from "@/lib/date-helpers";
+import { formatDate, formatDueDateForHtmlInput } from "@/lib/date-helpers";
 
 export const DUMMY_NEW_RENEWAL_ID = "dummy-new";
 
@@ -88,6 +89,7 @@ export function RenewalDetailModal({
   const [editedClientId, setEditedClientId] = useState<string>("");
   const [editedPlate, setEditedPlate] = useState<string>("");
   const [editedCommissionRate, setEditedCommissionRate] = useState<number>(15);
+  const [editedNotes, setEditedNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const prevRenewalIdRef = useRef<string | undefined>(undefined);
@@ -100,6 +102,7 @@ export function RenewalDetailModal({
       setEditedClientId("");
       setEditedPlate("");
       setEditedCommissionRate(15);
+      setEditedNotes("");
     }
   }, [renewal?.id]);
 
@@ -120,7 +123,8 @@ export function RenewalDetailModal({
         editedData.dueDate ||
         (editedData.premium ?? 0) ||
         editedPlate ||
-        editedCommissionRate !== 15
+        editedCommissionRate !== 15 ||
+        editedNotes.trim()
       );
       return hasClient || hasPolicy;
     }
@@ -130,18 +134,21 @@ export function RenewalDetailModal({
       (c?.phone ?? "") !== (renewal.client?.phone ?? "") ||
       (c?.email ?? "") !== (renewal.client?.email ?? "") ||
       (c?.birthday?.toString() ?? "") !== (renewal.client?.birthday?.toString() ?? "");
+    const dueChanged =
+      formatDueDateForHtmlInput(editedData.dueDate) !== formatDueDateForHtmlInput(renewal.dueDate);
     const policyChanged =
       (editedData.policyNumber ?? renewal.policyNumber ?? "") !== (renewal.policyNumber ?? "") ||
       (editedData.insurer ?? renewal.insurer ?? "") !== (renewal.insurer ?? "") ||
       (editedData.product ?? renewal.product ?? "") !== (renewal.product ?? "") ||
-      (editedData.dueDate?.toString() ?? renewal.dueDate?.toString() ?? "") !== (renewal.dueDate?.toString() ?? "") ||
+      dueChanged ||
       (editedData.premium ?? renewal.premium ?? 0) !== (renewal.premium ?? 0) ||
       (editedData.status === "active" ? "active" : "inactive") !== (renewal.status === "active" ? "active" : "inactive");
     const plateChanged = (editedPlate || "") !== (parseNotesFromPolicy(renewal.notes).plate || "");
     const commissionRateChanged =
       editedCommissionRate !== (parseNotesFromPolicy(renewal.notes).commissionRate ?? 15);
-    return clientChanged || policyChanged || plateChanged || commissionRateChanged;
-  }, [renewal, isEditing, isCreateMode, editedData, editedPlate, editedCommissionRate, editedClientId]);
+    const notesChanged = editedNotes !== (renewal.notes ?? "");
+    return clientChanged || policyChanged || plateChanged || commissionRateChanged || notesChanged;
+  }, [renewal, isEditing, isCreateMode, editedData, editedPlate, editedCommissionRate, editedNotes, editedClientId]);
 
   const requestClose = useCallback(() => {
     if (hasUnsavedChanges()) {
@@ -158,6 +165,7 @@ export function RenewalDetailModal({
       const parsed = parseNotesFromPolicy(renewal.notes);
       setEditedPlate(formatPlate(parsed.plate || ""));
       setEditedCommissionRate(parsed.commissionRate ?? 15);
+      setEditedNotes(renewal.notes ?? "");
     }
   }, [renewal]);
 
@@ -170,6 +178,7 @@ export function RenewalDetailModal({
     setEditedData({});
     setEditedPlate("");
     setEditedCommissionRate(15);
+    setEditedNotes("");
     setEditedClientId("");
   }, [isCreateMode, onClose]);
 
@@ -191,10 +200,11 @@ export function RenewalDetailModal({
           return;
         }
         const premium = editedData.premium ?? renewal.premium ?? 0;
-        const notes =
+        const autoNotes =
           premium > 0
             ? buildNotesWithCommission(premium, editedPlate.trim() || undefined, undefined, editedCommissionRate)
             : undefined;
+        const notes = editedNotes.trim() ? editedNotes.trim() : autoNotes;
         const status = editedData.status === "active" ? "active" : "inactive";
         await onCreate({
           clientId,
@@ -209,6 +219,7 @@ export function RenewalDetailModal({
         setEditedData({});
         setEditedPlate("");
         setEditedCommissionRate(15);
+        setEditedNotes("");
         setEditedClientId("");
         onClose();
       } else {
@@ -226,32 +237,28 @@ export function RenewalDetailModal({
             birthday: editedData.client.birthday,
           });
         }
-        const premium = editedData.premium ?? renewal.premium;
-        let notes = editedData.notes;
-        if (premium != null && premium > 0) {
-          notes = buildNotesWithCommission(premium, editedPlate.trim() || undefined, undefined, editedCommissionRate);
-        }
         const status = editedData.status === "active" ? "active" : "inactive";
         await onUpdate(renewal.id, {
           policyNumber: editedData.policyNumber,
           insurer: editedData.insurer,
           product: editedData.product,
-          dueDate: editedData.dueDate,
+          dueDate: editedData.dueDate ?? renewal.dueDate,
           premium: editedData.premium,
           status,
-          notes,
+          notes: editedNotes.trim(),
         });
         setIsEditing(false);
         setEditedData({});
         setEditedPlate("");
         setEditedCommissionRate(15);
+        setEditedNotes("");
       }
     } catch (error) {
       alert(`Erro ao salvar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
     } finally {
       setIsSaving(false);
     }
-  }, [renewal, isCreateMode, editedData, editedPlate, editedCommissionRate, editedClientId, onUpdate, onUpdateClient, onCreate, onClose]);
+  }, [renewal, isCreateMode, editedData, editedPlate, editedCommissionRate, editedNotes, editedClientId, onUpdate, onUpdateClient, onCreate, onClose]);
 
   const handleCloseAndSave = useCallback(async () => {
     setShowCloseConfirm(false);
@@ -637,15 +644,11 @@ export function RenewalDetailModal({
                   {(isEditing || isCreateMode) ? (
                     <Input
                       type="date"
-                      value={
-                        editedData.dueDate
-                          ? typeof editedData.dueDate === "string"
-                            ? editedData.dueDate.split("T")[0]
-                            : new Date(editedData.dueDate).toISOString().split("T")[0]
-                          : ""
-                      }
+                      value={formatDueDateForHtmlInput(
+                        editedData.dueDate !== undefined ? editedData.dueDate : renewal.dueDate
+                      )}
                       onChange={(e) =>
-                        handleInputChange("dueDate", e.target.value ? new Date(e.target.value) : undefined)
+                        handleInputChange("dueDate", e.target.value ? e.target.value : undefined)
                       }
                       className="font-semibold"
                     />
@@ -769,16 +772,26 @@ export function RenewalDetailModal({
                 );
               })()}
 
-              {/* Other Notes */}
-              {renewal.notes && (
+              {/* Observations — editable in edit mode; saved as policy.notes */}
+              {(isEditing || isCreateMode || renewal.notes) && (
                 <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
                   <div className="flex items-center gap-2 text-xs sm:text-sm font-medium mb-2">
                     <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span>Observações</span>
                   </div>
-                  <div className="bg-muted/50 rounded-md p-2.5 sm:p-3">
-                    <p className="text-xs sm:text-sm break-words">{renewal.notes}</p>
-                  </div>
+                  {(isEditing || isCreateMode) ? (
+                    <Textarea
+                      value={editedNotes}
+                      onChange={(e) => setEditedNotes(e.target.value)}
+                      placeholder="Plate, IOF, commission, free-form notes…"
+                      rows={4}
+                      className="text-xs sm:text-sm font-mono"
+                    />
+                  ) : (
+                    <div className="bg-muted/50 rounded-md p-2.5 sm:p-3">
+                      <p className="text-xs sm:text-sm break-words">{renewal.notes || "—"}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

@@ -240,6 +240,22 @@ export function formatDateForStorage(date: Date | string): string {
   return toDateStringLocal(typeof date === "string" ? new Date(date) : date);
 }
 
+/**
+ * Value for HTML <input type="date" />. Uses local calendar day (Brazil-safe).
+ * Prefer storing the input's YYYY-MM-DD string in form state — do not use new Date("YYYY-MM-DD") (UTC parse shifts the day).
+ */
+export function formatDueDateForHtmlInput(value: Date | string | undefined | null): string {
+  if (value == null || value === "") return "";
+  if (typeof value === "string") {
+    const iso = value.trim().split("T")[0] ?? "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) return toDateStringLocal(d);
+    return "";
+  }
+  return toDateStringLocal(value);
+}
+
 /** Product code 7 = Frota, uses 40 days for urgent; others use 10 days. */
 const FROTA_PRODUCT_CODE = 7;
 const URGENT_DAYS_DEFAULT = 10;
